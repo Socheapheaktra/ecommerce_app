@@ -1,0 +1,8 @@
+.venv
+.idea
+.env
+Dockerfile
+__pycache__
+instance
+*.pyc
+.DS_Store
