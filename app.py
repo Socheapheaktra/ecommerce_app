@@ -12,7 +12,7 @@ import models
 from resources.user import blp as UserBlueprint
 from resources.role import blp as RoleBlueprint
 from resources.country import blp as CountryBlueprint
-# from resources.user import blp as UserBlueprint
+from resources.address import blp as AddressBlueprint
 
 
 def create_app():
@@ -99,7 +99,7 @@ def create_app():
     api.register_blueprint(UserBlueprint) 
     api.register_blueprint(RoleBlueprint)
     api.register_blueprint(CountryBlueprint)
-    # api.register_blueprint(UserBlueprint)
+    api.register_blueprint(AddressBlueprint)
 
     @app.route('/')
     def home():
