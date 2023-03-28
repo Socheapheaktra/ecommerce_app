@@ -11,7 +11,7 @@ import models
 
 from resources.user import blp as UserBlueprint
 from resources.role import blp as RoleBlueprint
-# from resources.tag import blp as TagBlueprint
+from resources.country import blp as CountryBlueprint
 # from resources.user import blp as UserBlueprint
 
 
@@ -98,7 +98,7 @@ def create_app():
 
     api.register_blueprint(UserBlueprint) 
     api.register_blueprint(RoleBlueprint)
-    # api.register_blueprint(TagBlueprint)
+    api.register_blueprint(CountryBlueprint)
     # api.register_blueprint(UserBlueprint)
 
     @app.route('/')
