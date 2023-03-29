@@ -14,6 +14,7 @@ class AddressModel(db.Model):
     country_id = db.Column(db.Integer, db.ForeignKey("country.id"), nullable=False)
 
     country = db.relationship("CountryModel", back_populates="addresses")
+    users = db.relationship("UserModel", secondary="user_address", back_populates="addresses")
 
     def __init__(
         self,

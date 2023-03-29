@@ -12,6 +12,8 @@ class UserModel(db.Model):
     status = db.Column(db.Boolean, nullable=False)
 
     role = db.relationship("RoleModel", back_populates="users")
+    
+    addresses = db.relationship("AddressModel", secondary="user_address", back_populates="users")
 
     def __init__(
         self,

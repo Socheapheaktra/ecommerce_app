@@ -8,7 +8,7 @@ from schemas import *
 blp = Blueprint("Country", __name__, description="Operations on Countries.")
 
 INSERT_ERROR = "An error occurred while inserting data."
-INTEGRITY_ERROR = "A country with the name='{name}' is already exist."
+INTEGRITY_ERROR = "A country with the name='{}' is already exist."
 DELETE_ERROR = "An error occured while deleting data."
 DELETE_SUCCESS = "Deleted country name='{country_name}', id='{id}'."
 
@@ -26,6 +26,8 @@ class CountryOperation(MethodView):
         country = CountryModel(**country_data)
         try:
             country.save_to_db()
+        except IntegrityError:
+            abort(400, INTEGRITY_ERROR.format(country.country_name))
         except SQLAlchemyError:
             abort(500, message=INSERT_ERROR)
         else:
