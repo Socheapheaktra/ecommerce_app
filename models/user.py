@@ -1,6 +1,13 @@
 from db import db
 from typing import List
 
+user_address = db.Table(
+    "user_address",
+    db.Column('user_id', db.Integer, db.ForeignKey("site_user.id"), nullable=False),
+    db.Column('address_id', db.Integer, db.ForeignKey("address.id"), nullable=False),
+    db.Column('is_default', db.Boolean, default=False)
+)
+
 class UserModel(db.Model):
     __tablename__ = "site_user"
 
@@ -13,7 +20,7 @@ class UserModel(db.Model):
 
     role = db.relationship("RoleModel", back_populates="users")
     
-    addresses = db.relationship("AddressModel", secondary="user_address", back_populates="users")
+    addresses = db.relationship("AddressModel", secondary=user_address, back_populates="users", lazy="dynamic")
 
     def __init__(
         self,

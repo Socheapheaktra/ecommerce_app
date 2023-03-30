@@ -34,6 +34,7 @@ class CountrySchema(PlainCountrySchema):
 class UserSchema(PlainUserSchema):
     role_id = fields.Int(required=True, allow_none=False, dump_only=True)
     role = fields.Nested(PlainRoleSchema(), dump_only=True)
+    addresses = fields.List(fields.Nested(PlainAddressSchema()), dump_only=True)
 
 class RoleSchema(PlainRoleSchema):
     users = fields.List(fields.Nested(PlainUserSchema()), dump_only=True)
@@ -41,10 +42,12 @@ class RoleSchema(PlainRoleSchema):
 class AddressSchema(PlainAddressSchema):
     country_id = fields.Int(required=True, allow_none=False)
     country = fields.Nested(PlainCountrySchema(), dump_only=True)
+    users = fields.List(fields.Nested(PlainUserSchema()), dump_only=True)
 
 class UserAndAddressSchema(Schema):
     message = fields.Str(required=True, dump_only=True)
-    # user = fields.Nested(PlainUserSchema(), dump_only=True)
+    user = fields.Nested(PlainUserSchema(), dump_only=True)
+    address = fields.Nested(PlainAddressSchema(), dump_only=True)
 
 class UpdatePasswordSchema(Schema):
     id = fields.Int(required=True, allow_none=False, dump_only=True)
