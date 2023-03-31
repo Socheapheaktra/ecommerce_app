@@ -7,7 +7,7 @@ class CountryModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     country_name = db.Column(db.String(80), unique=True, nullable=False)
 
-    addresses = db.relationship("AddressModel", back_populates="country")
+    addresses = db.relationship("AddressModel", back_populates="country", cascade="all, delete")
 
     def __init__(self, country_name: str) -> None:
         self.country_name = country_name

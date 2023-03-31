@@ -23,7 +23,9 @@ class AddressList(MethodView):
     @blp.alt_response(500, example={"code": 500, "message": SELECT_ERROR, "status": "Internal Server Error"})
     def get(self):
         """Get List of Addresses with associated Country"""
+        #TODO: remove list of users also return in the response
         try:
+            # Equivalent to AddressModel.query.all() 
             addresses = AddressModel.find_all()
         except SQLAlchemyError:
             abort(500, message=SELECT_ERROR)

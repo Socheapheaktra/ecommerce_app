@@ -28,6 +28,7 @@ class UserOperation(MethodView):
     @blp.alt_response(500, example={"code": 500, "message": SELECT_ERROR, "status": "Internal Server Error"})
     def get(self):
         """Get List of registerd User from database"""
+        #TODO: Fix addresses also return in response
         try:
             users = UserModel.find_all()
         except SQLAlchemyError:

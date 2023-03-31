@@ -20,7 +20,13 @@ class UserModel(db.Model):
 
     role = db.relationship("RoleModel", back_populates="users")
     
-    addresses = db.relationship("AddressModel", secondary=user_address, back_populates="users", lazy="dynamic")
+    addresses = db.relationship(
+        "AddressModel", 
+        secondary=user_address, 
+        back_populates="users", 
+        lazy="dynamic",
+        cascade="save-update, merge",
+    )
 
     def __init__(
         self,
