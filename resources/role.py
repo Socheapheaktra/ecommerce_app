@@ -28,6 +28,11 @@ class RoleOperation(MethodView):
             abort(500, message=SELECT_ERROR)
         else:
             roles
+            
+        """
+        roles = self.env['user.group'].search([])
+        return roles
+        """
 
     @blp.arguments(RoleSchema)
     @blp.response(201, PlainRoleSchema)

@@ -13,7 +13,7 @@ from resources.user import blp as UserBlueprint
 from resources.role import blp as RoleBlueprint
 from resources.country import blp as CountryBlueprint
 from resources.address import blp as AddressBlueprint
-
+from resources.payment_type import blp as PaymentTypeBlueprint
 
 def create_app():
     # Initialize Flask Application
@@ -100,6 +100,7 @@ def create_app():
     api.register_blueprint(RoleBlueprint)
     api.register_blueprint(CountryBlueprint)
     api.register_blueprint(AddressBlueprint)
+    api.register_blueprint(PaymentTypeBlueprint)
 
     @app.route('/')
     def home():

@@ -18,8 +18,16 @@ class UserModel(db.Model):
     role_id = db.Column(db.Integer, db.ForeignKey("role.id"), nullable=False)
     status = db.Column(db.Boolean, nullable=False)
 
-    role = db.relationship("RoleModel", back_populates="users")
+    role = db.relationship(
+        "RoleModel", 
+        back_populates="users",
+    )
     
+    payment_methods = db.relationship(
+        "UserPaymentMethodModel",
+        back_populates="user",
+    )
+
     addresses = db.relationship(
         "AddressModel", 
         secondary=user_address, 

@@ -1,5 +1,14 @@
 from marshmallow import Schema, fields
 
+def responseSchema(parent_schema: Schema, many: bool = False):
+    class ResponseSchema(Schema):
+        code = fields.Int(required=True, allow_none=False, dump_only=True)
+        status = fields.Str(required=True, allow_none=False, dump_only=True)
+        message = fields.Str(dump_only=True)
+        data = fields.Nested(parent_schema, many=many, allow_none=True, dump_only=True)
+    
+    return ResponseSchema
+
 class UserLoginSchema(Schema):
     email = fields.Email(required=True, allow_none=False)
     password = fields.Str(required=True, allow_none=False, load_only=True)
@@ -28,13 +37,33 @@ class PlainCountrySchema(Schema):
     id = fields.Int(required=True, allow_none=False, dump_only=True)
     country_name = fields.Str(required=True, allow_none=False)
 
+class PlainPaymentTypeSchema(Schema):
+    id = fields.Int(required=True, dump_only=True)
+    name = fields.String(required=True, allow_none=False)
+
+class PlainUserPaymentMethodSchema(Schema):
+    id = fields.Int(required=True, dump_only=True)
+    user_id = fields.Int(required=True, dump_only=True, allow_none=False)
+    payment_type_id = fields.Int(required=True, allow_none=False)
+    provider = fields.String(required=True, allow_none=True)
+    account_number = fields.String(required=True, allow_none=True)
+    expiry_date = fields.String(required=True, allow_none=True)
+    is_default = fields.Boolean(required=True, dump_only=True)
+
+class UserPaymentMethodSchema(PlainUserPaymentMethodSchema):
+    user = fields.Nested(PlainUserSchema(), dump_only=True)
+    payment_type = fields.Nested(PlainPaymentTypeSchema(), dump_only=True)
+
+class PaymentTypeSchema(PlainPaymentTypeSchema):
+    user_payment_methods = fields.List(fields.Nested(UserPaymentMethodSchema()), dump_only=True)
+
 class CountrySchema(PlainCountrySchema):
     addresses = fields.List(fields.Nested(PlainAddressSchema()), dump_only=True)
 
 class UserSchema(PlainUserSchema):
-    role_id = fields.Int(required=True, allow_none=False, dump_only=True)
-    role = fields.Nested(PlainRoleSchema(), dump_only=True)
+    role = fields.Nested(PlainRoleSchema(only=["name"]), dump_only=True)
     addresses = fields.List(fields.Nested(PlainAddressSchema()), dump_only=True)
+    payment_methods = fields.List(fields.Nested(PlainUserPaymentMethodSchema()), dump_only=True)
 
 class RoleSchema(PlainRoleSchema):
     users = fields.List(fields.Nested(PlainUserSchema()), dump_only=True)

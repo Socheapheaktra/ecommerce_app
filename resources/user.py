@@ -2,7 +2,7 @@ from flask.views import MethodView
 from flask_smorest import abort, Blueprint
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from schemas import *
-from models import UserModel, AddressModel
+from models import UserModel, AddressModel, UserPaymentMethodModel
 
 INTEGRITY_ERROR = "Email Address is already in used."
 USER_ADDRESS_INTEGRITY = "User is already linked to the corresponding address."
@@ -24,20 +24,26 @@ blp = Blueprint("Users", __name__, description="Operations on Users.")
 
 @blp.route('/user')
 class UserOperation(MethodView):
-    @blp.response(200, UserSchema(many=True))
+    @blp.response(200, responseSchema(PlainUserSchema, many=True))
     @blp.alt_response(500, example={"code": 500, "message": SELECT_ERROR, "status": "Internal Server Error"})
     def get(self):
         """Get List of registerd User from database"""
         #TODO: Fix addresses also return in response
         try:
             users = UserModel.find_all()
-        except SQLAlchemyError:
+        except SQLAlchemyError as e:
+            print(e)
             abort(500, message=SELECT_ERROR)
         else:
-            return users
+            res = {
+                "code": 200,
+                "status": "OK",
+                "data": users,
+            }
+            return res
 
     @blp.arguments(UserSchema)
-    @blp.response(201, UserSchema)
+    @blp.response(201, responseSchema(PlainUserSchema))
     @blp.alt_response(400, example={"code": 400, "message": INTEGRITY_ERROR, "status": "Bad Request"})
     @blp.alt_response(500, example={"code": 500, "message": INSERT_ERROR, "staus": "Internal Server Error"})
     def post(self, user_data):
@@ -50,11 +56,16 @@ class UserOperation(MethodView):
         except SQLAlchemyError:
             abort(500, message=INSERT_ERROR)
         else:
-            return user
+            res = {
+                "code": 201,
+                "status": "Created",
+                "data": user,
+            }
+            return res
 
 @blp.route('/user/<int:user_id>')
 class UserUpdate(MethodView):
-    @blp.response(200, UserSchema)
+    @blp.response(200, responseSchema(UserSchema))
     @blp.alt_response(404, example={"code": 404, "message": USER_NOT_EXIST, "status": "Not Found"})
     @blp.alt_response(500, example={"code": 500, "message": SELECT_ERROR, "status": "Internal Server Error"})
     def get(self, user_id):
@@ -64,10 +75,15 @@ class UserUpdate(MethodView):
         except SQLAlchemyError:
             abort(500, message=SELECT_ERROR)
         else:
-            return user
+            res = {
+                "code": 200,
+                "status": "OK",
+                "data": user,
+            }
+            return res
 
     @blp.arguments(UpdatePasswordSchema)
-    @blp.response(200, UpdatePasswordSchema)
+    @blp.response(200, responseSchema(UpdatePasswordSchema()))
     @blp.alt_response(400, example={"code": 400, "message": INVALID_CREDENTIAL, "status": "Bad Request"})
     @blp.alt_response(404, example={"code": 404, "message": USER_NOT_EXIST, "status": "Not Found"})
     def put(self, user_data, user_id):
@@ -83,9 +99,14 @@ class UserUpdate(MethodView):
             except SQLAlchemyError:
                 abort(500, message=UPDATE_ERROR)
             else:
-                return {"message": PASSWORD_UPDATE_COMPLETE}
+                res = {
+                    "code": 200,
+                    "status": "OK",
+                    "message": PASSWORD_UPDATE_COMPLETE
+                }
+                return res
 
-    @blp.response(200, None, example={"message": DELETE_COMPLETE})
+    @blp.response(200, responseSchema(PlainUserSchema))
     @blp.alt_response(404, example={"code": 404, "message": USER_NOT_EXIST, "status": "Not Found"})
     @blp.alt_response(500, example={"code": 500, "message": DELETE_ERROR, "status": "Internal Server Error"})
     def delete(self, user_id):
@@ -96,9 +117,31 @@ class UserUpdate(MethodView):
         except SQLAlchemyError:
             abort(500, message=DELETE_ERROR)
         else:
-            return {
-                "message": DELETE_COMPLETE
+            res = {
+                "code": 200,
+                "status": "OK",
+                "data": user,
+                "message": DELETE_COMPLETE,
             }
+            return res
+
+@blp.route('/user/<int:user_id>/payment-method')
+class UserPaymentMethod(MethodView):
+    @blp.response(200, UserPaymentMethodSchema(many=True))
+    def get(self, user_id):
+        """Return List of specific user's Payment Method."""
+        try:
+            payment_methods = UserPaymentMethodModel.find_all(user_id=user_id)
+        except SQLAlchemyError:
+            abort(500, message=SELECT_ERROR)
+        else:
+            return payment_methods
+
+    @blp.arguments(UserPaymentMethodSchema)
+    @blp.response(200, UserPaymentMethodSchema)
+    def post(self, data, user_id):
+        """Create new User Payment Method."""
+        abort(501)
 
 @blp.route('/user/<int:user_id>/address/<int:address_id>')
 class LinkUserAndAddress(MethodView):
