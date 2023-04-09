@@ -14,11 +14,11 @@ UPDATE_ERROR = "An error occurred while updating user."
 DELETE_ERROR = "An error occurred while deleting user."
 SELECT_ERROR = "An error occured while fetching records."
 
-DELETE_COMPLETE = "User has been deleted."
-PASSWORD_UPDATE_COMPLETE = "Password updated successfully."
+DELETE_COMPLETE = "User {user} has been deleted."
+PASSWORD_UPDATE_COMPLETE = "Password updated successfully for user {user}."
 
 ADDRESS_NOT_EXIST = "Address not exist."
-USER_NOT_EXIST = "User not exist."
+INVALID_USER = "Invalid Username."
 
 blp = Blueprint("Users", __name__, description="Operations on Users.")
 
@@ -66,7 +66,7 @@ class UserOperation(MethodView):
 @blp.route('/user/<int:user_id>')
 class UserUpdate(MethodView):
     @blp.response(200, responseSchema(UserSchema))
-    @blp.alt_response(404, example={"code": 404, "message": USER_NOT_EXIST, "status": "Not Found"})
+    @blp.alt_response(404, example={"code": 404, "message": INVALID_USER, "status": "Not Found"})
     @blp.alt_response(500, example={"code": 500, "message": SELECT_ERROR, "status": "Internal Server Error"})
     def get(self, user_id):
         """Get User Information based on UserID"""
@@ -85,7 +85,7 @@ class UserUpdate(MethodView):
     @blp.arguments(UpdatePasswordSchema)
     @blp.response(200, responseSchema(UpdatePasswordSchema()))
     @blp.alt_response(400, example={"code": 400, "message": INVALID_CREDENTIAL, "status": "Bad Request"})
-    @blp.alt_response(404, example={"code": 404, "message": USER_NOT_EXIST, "status": "Not Found"})
+    @blp.alt_response(404, example={"code": 404, "message": INVALID_USER, "status": "Not Found"})
     def put(self, user_data, user_id):
         """Update User Password based on UserID"""
         # Check if user exist else return 404
@@ -102,12 +102,12 @@ class UserUpdate(MethodView):
                 res = {
                     "code": 200,
                     "status": "OK",
-                    "message": PASSWORD_UPDATE_COMPLETE
+                    "message": PASSWORD_UPDATE_COMPLETE.format(user=user.email_address)
                 }
                 return res
 
     @blp.response(200, responseSchema(PlainUserSchema))
-    @blp.alt_response(404, example={"code": 404, "message": USER_NOT_EXIST, "status": "Not Found"})
+    @blp.alt_response(404, example={"code": 404, "message": INVALID_USER, "status": "Not Found"})
     @blp.alt_response(500, example={"code": 500, "message": DELETE_ERROR, "status": "Internal Server Error"})
     def delete(self, user_id):
         """Delete User based on UserID if exists"""
@@ -121,13 +121,13 @@ class UserUpdate(MethodView):
                 "code": 200,
                 "status": "OK",
                 "data": user,
-                "message": DELETE_COMPLETE,
+                "message": DELETE_COMPLETE.format(user=user.email_address),
             }
             return res
 
 @blp.route('/user/<int:user_id>/payment-method')
 class UserPaymentMethod(MethodView):
-    @blp.response(200, UserPaymentMethodSchema(many=True))
+    @blp.response(200, responseSchema(UserPaymentMethodSchema, many=True))
     def get(self, user_id):
         """Return List of specific user's Payment Method."""
         try:
@@ -135,7 +135,12 @@ class UserPaymentMethod(MethodView):
         except SQLAlchemyError:
             abort(500, message=SELECT_ERROR)
         else:
-            return payment_methods
+            res = {
+                "code": 200,
+                "status": "OK",
+                "data": payment_methods,
+            }
+            return res
 
     @blp.arguments(UserPaymentMethodSchema)
     @blp.response(200, UserPaymentMethodSchema)
@@ -154,7 +159,7 @@ class LinkUserAndAddress(MethodView):
         # Check if user exists
         user = UserModel.query.filter_by(id=user_id).first()
         if user is None:
-            abort(404, message=USER_NOT_EXIST)
+            abort(404, message=INVALID_USER)
         
         # Check if address exists
         address = AddressModel.query.filter_by(id=address_id).first()
@@ -202,20 +207,25 @@ class UserResetPassword(MethodView):
 @blp.route('/login')
 class UserLogin(MethodView):
     @blp.arguments(UserLoginSchema)
-    @blp.response(200, UserSchema)
+    @blp.response(200, responseSchema(UserSchema))
     @blp.alt_response(401, example={"code": 401, "message": INVALID_CREDENTIAL, "status": "Unauthorized"})
-    @blp.alt_response(404, example={"code": 404, "message": USER_NOT_EXIST, "status": "Not Found"})
+    @blp.alt_response(404, example={"code": 404, "message": INVALID_USER, "status": "Not Found"})
     def post(self, login_data):
         """Return Login Message whethere successful or not"""
         # Check if User exists
         user = UserModel.query.filter_by(email_address=login_data['email']).first()
         if user is None: # if user not exist
-            abort(404, message=USER_NOT_EXIST.format(email=login_data['email']))
+            abort(404, message=INVALID_USER.format(email=login_data['email']))
         else:
             if user.password != login_data['password']:
                 abort(401, message=INVALID_CREDENTIAL)
             else:
-                return user
+                res = {
+                    "code": 200,
+                    "status": "OK",
+                    "data": user,
+                }
+                return res
 
 @blp.route('/logout')
 class UserLogout(MethodView):
