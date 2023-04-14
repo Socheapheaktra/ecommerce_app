@@ -19,7 +19,7 @@ DELETE_SUCCESS = "Address deleted successfully."
 
 @blp.route('/address')
 class AddressList(MethodView):
-    @blp.response(200, AddressSchema(many=True))
+    @blp.response(200, responseSchema(PlainAddressSchema, many=True))
     @blp.alt_response(500, example={"code": 500, "message": SELECT_ERROR, "status": "Internal Server Error"})
     def get(self):
         """Get List of Addresses with associated Country"""
@@ -30,10 +30,16 @@ class AddressList(MethodView):
         except SQLAlchemyError:
             abort(500, message=SELECT_ERROR)
         else:
-            return addresses
+            res = {
+                "code": 200,
+                "status": "OK",
+                "message": "Query was successful",
+                "data": addresses
+            }
+            return res
 
     @blp.arguments(AddressSchema)
-    @blp.response(201, AddressSchema)
+    @blp.response(201, responseSchema(PlainAddressSchema))
     @blp.alt_response(400, example={"code": 400, "message": INVALID_COUNTRY_ID, "status": "Bad Request"})
     @blp.alt_response(500, example={"code": 500, "message": INSERT_ERROR, "status": "Internal Server Error"})
     def post(self, address_data):
@@ -48,11 +54,17 @@ class AddressList(MethodView):
         except SQLAlchemyError:
             abort(500, message=INSERT_ERROR)
         else:
-            return address
+            res = {
+                "code": 201,
+                "status": "Created",
+                "message": "New addresss added successfully",
+                "data": address,
+            }
+            return res
 
 @blp.route('/address/<int:address_id>')
 class AddressItem(MethodView):
-    @blp.response(200, AddressSchema)
+    @blp.response(200, responseSchema(AddressSchema))
     @blp.alt_response(404, example={"code": 404, "message": INVALID_ADDRESS_ID, "status": "Not Found"})
     @blp.alt_response(500, example={"code": 500, "message": SELECT_ERROR, "status": "Internal Server Error"})
     def get(self, address_id):
@@ -62,10 +74,16 @@ class AddressItem(MethodView):
         except SQLAlchemyError:
             abort(500, message=SELECT_ERROR)
         else:
-            return address
+            res = {
+                "code": 200,
+                "status": "OK",
+                "message": "Query was successful",
+                "data": address
+            }
+            return res
 
     @blp.arguments(AddressSchema)
-    @blp.response(200, AddressSchema)
+    @blp.response(200, responseSchema(AddressSchema))
     @blp.alt_response(400, example={"code": 400, "message": INVALID_COUNTRY_ID, "status": "Bad Request"})
     @blp.alt_response(404, example={"code": 404, "message": INVALID_ADDRESS_ID, "status": "Not Found"})
     @blp.alt_response(500, example={"code": 500, "message": UPDATE_ERROR, "status": "Internal Server Error"})
@@ -88,9 +106,15 @@ class AddressItem(MethodView):
         except SQLAlchemyError:
             abort(500, message=UPDATE_ERROR)
         else:
-            return address
+            res = {
+                "code": 200,
+                "status": "OK",
+                "message": "Update successful on address_id = {addr_id}.".format(addr_id=address.id),
+                "data": address
+            }
+            return res
 
-    @blp.response(200, None, example={"message": DELETE_SUCCESS})
+    @blp.response(200, responseSchema(PlainAddressSchema))
     @blp.alt_response(404, example={"code": 404, "message": INVALID_ADDRESS_ID, "status": "Not Found"})
     @blp.alt_response(500, example={"code": 500, "message": DELETE_ERROR, "status": "Internal Server Error"})
     def delete(self, address_id):
@@ -101,4 +125,10 @@ class AddressItem(MethodView):
         except SQLAlchemyError:
             abort(500, message=DELETE_ERROR)
         else:
-            return {"message": DELETE_SUCCESS}
+            res = {
+                "code": 200,
+                "status": "OK",
+                "message": "Address Deleted Successfully.",
+                "data": address,
+            }
+            return res
