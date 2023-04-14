@@ -20,7 +20,7 @@ INVALID_PAYMENT_TYPE = "Invalid PaymentType ID"
 
 @blp.route('/payment-type')
 class PaymentType(MethodView):
-    @blp.response(200, PlainPaymentTypeSchema(many=True))
+    @blp.response(200, responseSchema(PlainPaymentTypeSchema, many=True))
     @blp.alt_response(500, example={"code": 500, "message": SELECT_ERROR, "status": "Internal Server Error"})
     def get(sefl):
         """Get List of Payment Types"""
@@ -29,10 +29,16 @@ class PaymentType(MethodView):
         except SQLAlchemyError:
             abort(500, message=SELECT_ERROR)
         else:
-            return payment_types
+            res = {
+                "code": 200,
+                "status": "OK",
+                "message": "Query was successful",
+                "data": payment_types,
+            }
+            return res
 
     @blp.arguments(PlainPaymentTypeSchema)
-    @blp.response(200, PlainPaymentTypeSchema)
+    @blp.response(200, responseSchema(PlainPaymentTypeSchema))
     @blp.alt_response(400, example={"code": 400, "message": INTEGRITY_ERROR, "status": "Bad Request"})
     @blp.alt_response(500, example={"code": 500, "message": INSERT_ERROR, "status": "Internal Server Error"})
     def post(self, data):
@@ -43,11 +49,17 @@ class PaymentType(MethodView):
         except IntegrityError:
             abort(400, message=INTEGRITY_ERROR)
         else:
-            return payment_type
+            res = {
+                "code": 201,
+                "status": "Created",
+                "message": "Payment Type {name} added successfully.".format(name=payment_type.name),
+                "data": payment_type
+            }
+            return res
 
 @blp.route('/payment-type/<int:payment_type_id>')
 class PaymentTypeDetail(MethodView):
-    @blp.response(200, PaymentTypeSchema)
+    @blp.response(200, responseSchema(PaymentTypeSchema))
     @blp.alt_response(404, example={"code": 404, "message": INVALID_PAYMENT_TYPE, "status": "Not Found"})
     @blp.alt_response(500, example={"code": 500, "message": SELECT_ERROR, "status": "Internal Server Error"})
     def get(self, payment_type_id):
@@ -57,9 +69,15 @@ class PaymentTypeDetail(MethodView):
         except SQLAlchemyError:
             abort(500, message=SELECT_ERROR)
         else:
-            return payment_type
+            res = {
+                "code": 200,
+                "status": "OK",
+                "message": "Query was successful",
+                "data": payment_type,
+            }
+            return res
 
-    @blp.response(200, example={"message": "Payment Type=<name> has been deleted."})
+    @blp.response(200, responseSchema(PlainPaymentTypeSchema))
     @blp.alt_response(404, example={"code": 404, "message": INVALID_PAYMENT_TYPE, "status": "Not Found"})
     @blp.alt_response(500, example={"code": 500, "message": DELETE_ERROR})
     def delete(self, payment_type_id):
@@ -70,4 +88,10 @@ class PaymentTypeDetail(MethodView):
         except SQLAlchemyError:
             abort(500, message=DELETE_ERROR)
         else:
-            return {"message": "Payment Type={} has been deleted.".format(payment_type.name)}
+            res = {
+                "code": 200,
+                "status": "OK",
+                "message": "Payment Type {name} has been deleted successfully.".format(name=payment_type.name),
+                "data": payment_type,
+            }
+            return res
