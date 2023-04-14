@@ -19,7 +19,7 @@ DELETE_SUCCESS = "Country deleted successfully."
 
 @blp.route('/country')
 class CountryOperation(MethodView):
-    @blp.response(200, PlainCountrySchema(many=True))
+    @blp.response(200, responseSchema(PlainCountrySchema, many=True))
     @blp.alt_response(500, example={"code": 500, "message": SELECT_ERROR, "status": "Internal Server Error"})
     def get(self):
         """Return List of Countries from database"""
@@ -28,10 +28,16 @@ class CountryOperation(MethodView):
         except SQLAlchemyError:
             abort(500, message=SELECT_ERROR)
         else:
-            return countries
+            res = {
+                "code": 200,
+                "status": "OK",
+                "data": countries,
+                "message": "Query was successful.",
+            }
+            return res
 
     @blp.arguments(CountrySchema)
-    @blp.response(201, PlainCountrySchema)
+    @blp.response(201, responseSchema(PlainCountrySchema))
     @blp.alt_response(400, example={"code": 400, "message": INTEGRITY_ERROR, "status": "Bad Request"})
     @blp.alt_response(500, example={"code": 500, "message": INSERT_ERROR, "status": "Internal Server Error"})
     def post(self, country_data):
@@ -44,11 +50,17 @@ class CountryOperation(MethodView):
         except SQLAlchemyError:
             abort(500, message=INSERT_ERROR)
         else:
-            return country
+            res = {
+                "code": 201,
+                "status": "Created",
+                "data": country,
+                "message": "New Country {name} added successfully.".format(name=country.country_name)
+            }
+            return res
 
 @blp.route('/country/<int:country_id>')
 class CountryUpdate(MethodView):
-    @blp.response(200, CountrySchema)
+    @blp.response(200, responseSchema(CountrySchema))
     @blp.alt_response(404, example={"code": 404, "message": COUNTRY_NOT_FOUND, "status": "Not Found"})
     @blp.alt_response(500, example={"code": 500, "message": SELECT_ERROR, "status": "Internal Server Errro"})
     def get(self, country_id):
@@ -58,9 +70,15 @@ class CountryUpdate(MethodView):
         except SQLAlchemyError:
             abort(500, message=SELECT_ERROR)
         else:
-            return country
+            res = {
+                "code": 200,
+                "status": "OK",
+                "data": country,
+                "message": "Query was successful.",
+            }
+            return res
 
-    @blp.response(200, None, example={"message": DELETE_SUCCESS})
+    @blp.response(200, responseSchema(PlainCountrySchema))
     @blp.alt_response(404, example={"code": 404, "message": COUNTRY_NOT_FOUND, "status": "Not Found"})
     @blp.alt_response(500, example={"code": 500, "message": DELETE_ERROR, "status": "Internal Server Error  "})
     def delete(self, country_id):
@@ -71,4 +89,10 @@ class CountryUpdate(MethodView):
         except SQLAlchemyError:
             abort(500, message=DELETE_ERROR)
         else:
-            return {"message": DELETE_SUCCESS}
+            res = {
+                "code": 200,
+                "status": "OK",
+                "data": country,
+                "message": "Country {name} has been deleted successfully.".format(name=country.country_name)
+            }
+            return res
