@@ -39,6 +39,7 @@ class UserOperation(MethodView):
                 "code": 200,
                 "status": "OK",
                 "data": users,
+                "message": "Query was successful",
             }
             return res
 
@@ -60,6 +61,7 @@ class UserOperation(MethodView):
                 "code": 201,
                 "status": "Created",
                 "data": user,
+                "message": "User created successfully."
             }
             return res
 
@@ -79,6 +81,7 @@ class UserUpdate(MethodView):
                 "code": 200,
                 "status": "OK",
                 "data": user,
+                "message": "Query was successful.",
             }
             return res
 
@@ -139,6 +142,7 @@ class UserPaymentMethod(MethodView):
                 "code": 200,
                 "status": "OK",
                 "data": payment_methods,
+                "message": "Query was successful",
             }
             return res
 

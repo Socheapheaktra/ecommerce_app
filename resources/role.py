@@ -8,17 +8,17 @@ blp = Blueprint("Roles", __name__, description="Operations on Role.")
 
 INTEGRITY_ERROR = "Role name already exists."
 
-ROLE_NOT_FOUND = "Role with that ID does not exist."
+INVALID_ROLE_ID = "Invalid Role ID"
 
 SELECT_ERROR = "An error occured while fetching data."
 INSERT_ERROR = "An error occurred while inserting."
 DELETE_ERROR = "An error occurred while deleting record."
 
-DELETE_SUCCESS = "Role has been deleted."
+DELETE_SUCCESS = "Role {role} has been deleted."
 
 @blp.route('/role')
 class RoleOperation(MethodView):
-    @blp.response(200, PlainRoleSchema(many=True))
+    @blp.response(200, responseSchema(PlainRoleSchema, many=True))
     @blp.alt_response(500, example={"code": 500, "message": SELECT_ERROR, "status": "Internal Server Error"})
     def get(self):
         """Return List of Roles existed in database"""
@@ -27,15 +27,16 @@ class RoleOperation(MethodView):
         except SQLAlchemyError:
             abort(500, message=SELECT_ERROR)
         else:
-            roles
-            
-        """
-        roles = self.env['user.group'].search([])
-        return roles
-        """
+            res = {
+                "code": 200,
+                "status": "OK",
+                "data": roles,
+                "message": "Query was successful",
+            }
+            return res
 
     @blp.arguments(RoleSchema)
-    @blp.response(201, PlainRoleSchema)
+    @blp.response(201, responseSchema(PlainRoleSchema))
     @blp.alt_response(400, example={"code": 400, "message": INTEGRITY_ERROR, "status": "Bad Request"})
     @blp.alt_response(500, example={"code": 500, "message": INSERT_ERROR, "status": "Internal Server Error"})
     def post(self, role_data):
@@ -48,13 +49,19 @@ class RoleOperation(MethodView):
         except SQLAlchemyError:
             abort(500, message=INSERT_ERROR)
         else:
-            return role
+            res = {
+                "code": 201,
+                "status": "Created",
+                "data": role,
+                "message": "New Role Created Successfully."
+            }
+            return res
 
 @blp.route("/role/<int:role_id>")
 class RoleUpdate(MethodView):
-    @blp.response(200, RoleSchema)
-    @blp.response(404, example={"code": 404, "message": ROLE_NOT_FOUND, "status": "Not Found"})
-    @blp.response(500, example={"code": 500, "message": SELECT_ERROR, "status": "Internal Server Error"})
+    @blp.response(200, responseSchema(RoleSchema))
+    @blp.alt_response(404, example={"code": 404, "message": INVALID_ROLE_ID, "status": "Not Found"})
+    @blp.alt_response(500, example={"code": 500, "message": SELECT_ERROR, "status": "Internal Server Error"})
     def get(self, role_id):
         """Return Role Information based on RoleID"""
         try:
@@ -62,10 +69,16 @@ class RoleUpdate(MethodView):
         except SQLAlchemyError:
             abort(500, message=SELECT_ERROR)
         else:
-            return role
+            res = {
+                "code": 200,
+                "status": "OK",
+                "data": role,
+                "message": "Query was successful",
+            }
+            return res
 
-    @blp.response(200, None, example={"message": DELETE_SUCCESS})
-    @blp.alt_response(404, example={"code": 404, "message": ROLE_NOT_FOUND, "status": "Not Found"})
+    @blp.response(200, responseSchema(PlainRoleSchema))
+    @blp.alt_response(404, example={"code": 404, "message": INVALID_ROLE_ID, "status": "Not Found"})
     @blp.alt_response(500, example={"code": 500, "message": DELETE_ERROR, "status": "Internal Server Error"})
     def delete(self, role_id):
         """Delete Role from database based on RoleID if exists"""
@@ -75,4 +88,10 @@ class RoleUpdate(MethodView):
         except SQLAlchemyError:
             abort(500, message=DELETE_ERROR)
         else:
-            return {"message": DELETE_SUCCESS}
+            res = {
+                "code": 200,
+                "status": "OK",
+                "data": role,
+                "message": DELETE_SUCCESS.format(role=role.name)
+            }
+            return res
