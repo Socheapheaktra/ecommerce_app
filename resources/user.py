@@ -87,6 +87,8 @@ class UserUpdate(MethodView):
             """Update User Password based on UserID"""
             # Check if user exist else return 404
             user = UserModel.find_by_id(id=user_id)
+            if not user:
+                return Response.not_found(message=INVALID_USER_ID)
             if user.password != user_data['old_password']:
                 abort(400, message=INVALID_CREDENTIAL)
             else:
@@ -104,8 +106,10 @@ class UserUpdate(MethodView):
     @blp.alt_response(500, example={"code": 500, "message": DELETE_ERROR, "status": "Internal Server Error"})
     def delete(self, user_id):
         """Delete User based on UserID if exists"""
-        user = UserModel.find_by_id(user_id)
         try:
+            user = UserModel.find_by_id(user_id)
+            if not user:
+                return Response.not_found(message=INVALID_USER_ID)
             user.delete_from_db()
             return Response(data=user, message=DELETE_COMPLETE.format(user=user.email_address))
         except SQLAlchemyError as error:

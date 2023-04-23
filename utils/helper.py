@@ -33,3 +33,11 @@ class Response:
             status="Internal Server Error",
             message=message
         )
+    
+    @classmethod
+    def not_found(cls, message: str) -> "Response":
+        return cls(
+            code=404,
+            status="Not found",
+            message=message
+        )
