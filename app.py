@@ -15,6 +15,8 @@ from resources.country import blp as CountryBlueprint
 from resources.address import blp as AddressBlueprint
 from resources.payment_type import blp as PaymentTypeBlueprint
 
+api_version = "/api/v1"
+
 def create_app():
     # Initialize Flask Application
     app = Flask(__name__)
@@ -96,11 +98,11 @@ def create_app():
     def create_table():
         db.create_all()
 
-    api.register_blueprint(UserBlueprint) 
-    api.register_blueprint(RoleBlueprint)
-    api.register_blueprint(CountryBlueprint)
-    api.register_blueprint(AddressBlueprint)
-    api.register_blueprint(PaymentTypeBlueprint)
+    api.register_blueprint(UserBlueprint, url_prefix=api_version) 
+    api.register_blueprint(RoleBlueprint, url_prefix=api_version)
+    api.register_blueprint(CountryBlueprint, url_prefix=api_version)
+    api.register_blueprint(AddressBlueprint, url_prefix=api_version)
+    api.register_blueprint(PaymentTypeBlueprint, url_prefix=api_version)
 
     @app.route('/')
     def home():
