@@ -4,7 +4,7 @@ class Response:
         data: any = {}, 
         code: int = 200, 
         status: str = "OK",
-        message: str = "",
+        message: str = "Query Successful",
     ) -> None:
         self.code = code
         self.status = status
@@ -32,6 +32,14 @@ class Response:
             code=500,
             status="Internal Server Error",
             message=message
+        )
+
+    @classmethod
+    def bad_request(cls, message: str) -> "Response":
+        return cls(
+            code=400,
+            status="Bad Request",
+            message=message,
         )
     
     @classmethod
