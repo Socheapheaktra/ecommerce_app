@@ -4,6 +4,7 @@ from flask_smorest import Api
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
 from flask_cors import CORS
+from flask_uploads import configure_uploads, patch_request_class
 
 from db import db
 
@@ -14,6 +15,9 @@ from resources.role import blp as RoleBlueprint
 from resources.country import blp as CountryBlueprint
 from resources.address import blp as AddressBlueprint
 from resources.payment_type import blp as PaymentTypeBlueprint
+from resources.image import blp as ImageBlueprint
+
+from utils.image_helper import IMAGE_SET
 
 api_version = "/api/v1"
 
@@ -22,6 +26,7 @@ def create_app():
     app = Flask(__name__)
     CORS(app)
 
+    app.config['UPLOADED_IMAGES_DEST'] = os.path.join('static', 'images')  # define the path to save the image
     app.config['PROPAGATE_EXCEPTIONS'] = True # I have no IDEA WTF this is
     app.config['API_TITLE'] = "E-Commerce REST API" # Name of your API
     app.config['API_VERSION'] = 'v1' # Version of your API
@@ -32,10 +37,14 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///data.db" # Connection String to your database
     # app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://username:password@localhost/db_name" # Connection String to your database
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False # Also no idea wtf this is
+
     db.init_app(app) # Initialize Database
     # migrate = Migrate(app, db) # Migrate Database
-
     api = Api(app) # Link API
+
+    # Configure ImageUploads
+    patch_request_class(app, 10 * 1024 * 1024)  # 10MB max size upload
+    configure_uploads(app, IMAGE_SET)  # Need to put this after the app.config
     
     # Randomly Generated SECRET KEY
     # app.config['JWT_SECRET_KEY'] = "273400726116270771902746508700512837087"
@@ -103,6 +112,7 @@ def create_app():
     api.register_blueprint(CountryBlueprint, url_prefix=api_version)
     api.register_blueprint(AddressBlueprint, url_prefix=api_version)
     api.register_blueprint(PaymentTypeBlueprint, url_prefix=api_version)
+    api.register_blueprint(ImageBlueprint, url_prefix=api_version)
 
     @app.route('/')
     def home():
