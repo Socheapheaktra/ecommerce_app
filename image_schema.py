@@ -17,4 +17,5 @@ class FileStorageField(fields.Field):
         return value
 
 class ImageSchema(Schema):
-    image = FileStorageField(required=True)
+    image = FileStorageField(required=True, load_only=True)
+    image_url = fields.Str(dump_only=True)

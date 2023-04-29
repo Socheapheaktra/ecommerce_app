@@ -1,9 +1,12 @@
 import os
 import re
+import socket
+
 from typing import Union
 from werkzeug.datastructures import FileStorage
-
 from flask_uploads import UploadSet, IMAGES
+
+from config import *
 
 IMAGE_SET = UploadSet("images", IMAGES)  # set name and allowed extensions
 
@@ -64,3 +67,12 @@ def get_extension(file: Union[str, FileStorage]) -> str:
     """
     filename = _retrieve_filename(file)
     return os.path.splitext(filename)[1]
+
+def get_image_url(filename: str) -> str:
+    #  get IP_ADDRESS
+    hostname = socket.gethostname()
+    ip_addr = socket.gethostbyname(hostname)
+
+    image_url = f"{ip_addr}:{PORT}{API_PREFIX}/{API_VERSION}/image/{filename}"
+
+    return image_url

@@ -1,3 +1,5 @@
+import socket
+
 class Response:
     def __init__(
         self, 
@@ -10,6 +12,15 @@ class Response:
         self.status = status
         self.data = data
         self.message = message
+
+    @property
+    def json(self) -> dict:
+        return {
+            "code": self.code,
+            "status": self.status,
+            "message": self.message,
+            "data": self.data
+        }
 
     def without_data(self) -> dict:
         return {
