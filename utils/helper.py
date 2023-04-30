@@ -1,5 +1,7 @@
 import socket
 
+DEFAULT_ERROR_MESSAGE = "An unexpected error occurred."
+
 class Response:
     def __init__(
         self, 
@@ -38,7 +40,7 @@ class Response:
         )
     
     @classmethod
-    def server_error(cls, message: str) -> "Response":
+    def server_error(cls, message: str = DEFAULT_ERROR_MESSAGE) -> "Response":
         return cls(
             code=500,
             status="Internal Server Error",
@@ -46,7 +48,7 @@ class Response:
         )
 
     @classmethod
-    def bad_request(cls, message: str) -> "Response":
+    def bad_request(cls, message: str = DEFAULT_ERROR_MESSAGE) -> "Response":
         return cls(
             code=400,
             status="Bad Request",
@@ -54,9 +56,17 @@ class Response:
         )
     
     @classmethod
-    def not_found(cls, message: str) -> "Response":
+    def not_found(cls, message: str = DEFAULT_ERROR_MESSAGE) -> "Response":
         return cls(
             code=404,
             status="Not found",
             message=message
+        )
+
+    @classmethod
+    def access_denied(cls) -> "Response":
+        return cls(
+            code=403,
+            status="Access Denied.",
+            message="Permission denied. Please contact admin."
         )

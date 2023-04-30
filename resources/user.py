@@ -1,14 +1,20 @@
 from flask.views import MethodView
 from flask_smorest import abort, Blueprint
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from flask_jwt_extended import (create_refresh_token,
+                                create_access_token,
+                                get_jwt_identity,
+                                get_jwt,
+                                jwt_required)
+
 from schemas import *
-from models import UserModel, AddressModel, UserPaymentMethodModel
+from models import UserModel, AddressModel, UserPaymentMethodModel, RoleModel
 from utils.helper import Response
 
 INTEGRITY_ERROR = "Email Address is already in used."
 USER_ADDRESS_INTEGRITY = "User is already linked to the corresponding address."
 
-INVALID_CREDENTIAL = "Invalid user password."
+INVALID_CREDENTIAL = "Invalid Credential"
 
 INSERT_ERROR = "An error occurred while creating user."
 UPDATE_ERROR = "An error occurred while updating user."
@@ -28,34 +34,62 @@ blp = Blueprint("Users", __name__, description="Operations on Users.")
 
 @blp.route('/user')
 class UserOperation(MethodView):
+    @jwt_required()
     @blp.response(200, responseSchema(PlainUserSchema, many=True))
-    @blp.alt_response(500, example={"code": 500, "message": SELECT_ERROR, "status": "Internal Server Error"})
+    @blp.alt_response(403, example=Response.access_denied().json)
+    @blp.alt_response(500, example=Response.server_error().json)
     def get(self):
         """Get List of registerd User from database"""
         try:
+            cur_user = get_jwt()
+            if not cur_user['is_admin']:
+                return Response.access_denied()
             users = UserModel.find_all()
-<<<<<<< HEAD
-        except SQLAlchemyError as e:
-            print(e)
-            abort(500, message=SELECT_ERROR)
-        else:
-            res = {
-                "code": 200,
-                "status": "OK",
-                "data": users,
-                "message": "Query was successful",
-            }
-            return res
-=======
             return Response(data=users)
         except SQLAlchemyError as error:
             return Response.server_error(message=str(error))
->>>>>>> 60dd927c9ea07a781001766f8927689a238119e8
 
+    @jwt_required()
     @blp.arguments(UserSchema)
     @blp.response(201, responseSchema(PlainUserSchema))
-    @blp.alt_response(400, example={"code": 400, "message": INTEGRITY_ERROR, "status": "Bad Request"})
-    @blp.alt_response(500, example={"code": 500, "message": INSERT_ERROR, "staus": "Internal Server Error"})
+    @blp.alt_response(400, example=Response.bad_request().json)
+    @blp.alt_response(403, example=Response.access_denied().json)
+    @blp.alt_response(500, example=Response.server_error().json)
+    def post(self, user_data):
+        """Register User and add into database"""
+        try:
+            cur_user = get_jwt()
+            if not cur_user['is_admin']:
+                return Response.access_denied()
+            role_id = user_data['role_id'] if user_data['role_id'] else 1  # default role="Customer"
+            user = UserModel(**user_data, role_id=role_id)
+            user.save_to_db()
+            return Response(
+                data=user, 
+                code=201, 
+                status="Created", 
+                message="New User created successfully"
+            )
+        except IntegrityError:
+            return Response(
+                code=400,
+                status="Bad Request",
+                message=INTEGRITY_ERROR
+            )
+        except SQLAlchemyError as error:
+            return Response.server_error(message=error)
+
+    @blp.response(200, responseSchema(PlainUserSchema))
+    def put(self, user_data):
+        "Update Information of logged in user."
+        abort(501)
+
+@blp.route('/user/register')
+class UserRegister(MethodView):
+    @blp.arguments(UserSchema)
+    @blp.response(201, responseSchema(PlainUserSchema))
+    @blp.alt_response(400, example=Response.bad_request().json)
+    @blp.alt_response(500, example=Response.server_error().json)
     def post(self, user_data):
         """Register User and add into database"""
         user = UserModel(**user_data)
@@ -68,63 +102,91 @@ class UserOperation(MethodView):
                 message="New User created successfully"
             )
         except IntegrityError:
-<<<<<<< HEAD
-            abort(400, message=INTEGRITY_ERROR)
-        except SQLAlchemyError:
-            abort(500, message=INSERT_ERROR)
-        else:
-            res = {
-                "code": 201,
-                "status": "Created",
-                "data": user,
-                "message": "User created successfully."
-            }
-            return res
-=======
             return Response(
                 code=400,
                 status="Bad Request",
                 message=INTEGRITY_ERROR
             )
         except SQLAlchemyError as error:
-           return Response.server_error(message=error)
->>>>>>> 60dd927c9ea07a781001766f8927689a238119e8
+            return Response.server_error(message=error)
 
 @blp.route('/user/<int:user_id>')
 class UserUpdate(MethodView):
+    @jwt_required()
     @blp.response(200, responseSchema(UserSchema))
-    @blp.alt_response(404, example={"code": 404, "message": INVALID_USER, "status": "Not Found"})
-    @blp.alt_response(500, example={"code": 500, "message": SELECT_ERROR, "status": "Internal Server Error"})
+    @blp.alt_response(404, example=Response.not_found().json)
+    @blp.alt_response(500, example=Response.server_error().json)
     def get(self, user_id):
         """Get User Information based on UserID"""
         try:
             user = UserModel.find_by_id(id=user_id)
-<<<<<<< HEAD
-        except SQLAlchemyError:
-            abort(500, message=SELECT_ERROR)
-        else:
-            res = {
-                "code": 200,
-                "status": "OK",
-                "data": user,
-                "message": "Query was successful.",
-            }
-            return res
-=======
             if not user:
                 return Response(code=404, status="Not Found", message=f"Unable to find user with id='{user_id}'")
             else:
                 return Response(data=user)
         except SQLAlchemyError as error:
             return Response.server_error(message=error)
->>>>>>> 60dd927c9ea07a781001766f8927689a238119e8
 
+    def put(self, user_id, **user_data):
+        """Update User Info based on UserID"""
+        abort(501)
+
+    @jwt_required()
+    @blp.response(200, responseSchema(PlainUserSchema))
+    @blp.alt_response(403, example=Response.access_denied().json)
+    @blp.alt_response(404, example=Response.not_found().json)
+    @blp.alt_response(500, example=Response.server_error().json)
+    def delete(self, user_id):
+        """Delete User based on UserID if exists"""
+        try:
+            cur_user = get_jwt()
+            if not cur_user['is_admin']:
+                return Response.access_denied()
+            user = UserModel.find_by_id(user_id)
+            if not user:
+                return Response.not_found(message=INVALID_USER_ID)
+            user.delete_from_db()
+            return Response(data=user, message=DELETE_COMPLETE.format(user=user.email_address))
+        except SQLAlchemyError as error:
+            return Response.server_error(message=str(error))
+
+@blp.route('/user/<int:user_id>/role/<int:role_id>')
+class UserUpdateRole(MethodView):
+    @jwt_required()
+    @blp.response(200, BaseResponseSchema)
+    @blp.alt_response(404, example=Response.not_found().without_data())
+    @blp.alt_response(500, example=Response.server_error().without_data())
+    def post(self, user_id, role_id):
+        try:
+            cur_user = get_jwt()
+            if not cur_user['is_admin']:
+                return Response.access_denied()
+            user = UserModel.find_by_id(id=user_id)
+            if not user:
+                return Response.not_found(message=f"Unable to get user with id='{user_id}'.")
+            
+            role = RoleModel.find_by_id(id=role_id)
+            if not role:
+                return Response.not_found(message=f"Invalid Role ID.")
+            
+            user.role_id = role_id
+            user.save_to_db()
+            return Response(message=f"User {user.email_address} has been assigned as {role.name}.")
+        except SQLAlchemyError:
+            return Response.server_error()
+
+@blp.route('/user/change-password')
+class UserUpdatePassword(MethodView):
+    @jwt_required()
     @blp.arguments(UpdatePasswordSchema)
     @blp.response(200, responseSchema(UpdatePasswordSchema()))
     @blp.alt_response(400, example={"code": 400, "message": INVALID_CREDENTIAL, "status": "Bad Request"})
     @blp.alt_response(404, example={"code": 404, "message": INVALID_USER, "status": "Not Found"})
-    def put(self, user_data, user_id):
+    def put(self, user_data):
+        """Change Password of logged in user"""
         try:
+            # Get user_id
+            user_id = get_jwt_identity()
             """Update User Password based on UserID"""
             # Check if user exist else return 404
             user = UserModel.find_by_id(id=user_id)
@@ -142,44 +204,19 @@ class UserUpdate(MethodView):
         except Exception as error:
             return Response.server_error(message=error)
 
-    @blp.response(200, responseSchema(PlainUserSchema))
-    @blp.alt_response(404, example={"code": 404, "message": INVALID_USER, "status": "Not Found"})
-    @blp.alt_response(500, example={"code": 500, "message": DELETE_ERROR, "status": "Internal Server Error"})
-    def delete(self, user_id):
-        """Delete User based on UserID if exists"""
-        try:
-            user = UserModel.find_by_id(user_id)
-            if not user:
-                return Response.not_found(message=INVALID_USER_ID)
-            user.delete_from_db()
-            return Response(data=user, message=DELETE_COMPLETE.format(user=user.email_address))
-        except SQLAlchemyError as error:
-            return Response.server_error(message=str(error))
-
 @blp.route('/user/<int:user_id>/payment-method')
 class UserPaymentMethod(MethodView):
+    @jwt_required()
     @blp.response(200, responseSchema(UserPaymentMethodSchema, many=True))
     def get(self, user_id):
         """Return List of specific user's Payment Method."""
         try:
             payment_methods = UserPaymentMethodModel.find_all(user_id=user_id)
-<<<<<<< HEAD
-        except SQLAlchemyError:
-            abort(500, message=SELECT_ERROR)
-        else:
-            res = {
-                "code": 200,
-                "status": "OK",
-                "data": payment_methods,
-                "message": "Query was successful",
-            }
-            return res
-=======
             return Response(data=payment_methods)
         except SQLAlchemyError as error:
             return Response.server_error(message=str(error))
->>>>>>> 60dd927c9ea07a781001766f8927689a238119e8
 
+    @jwt_required()
     @blp.arguments(UserPaymentMethodSchema)
     @blp.response(200, UserPaymentMethodSchema)
     def post(self, data, user_id):
@@ -188,6 +225,7 @@ class UserPaymentMethod(MethodView):
 
 @blp.route('/user/<int:user_id>/address/<int:address_id>')
 class LinkUserAndAddress(MethodView):
+    @jwt_required()
     @blp.response(201, responseSchema(UserAndAddressSchema))
     @blp.alt_response(400, example={"code": 400, "message": USER_ADDRESS_INTEGRITY, "status": "Bad Request"})
     @blp.alt_response(404, example={"code": 404, "message": "User/Address Not exists.", "status": "Not Found"})
@@ -259,7 +297,7 @@ class UserResetPassword(MethodView):
 @blp.route('/login')
 class UserLogin(MethodView):
     @blp.arguments(UserLoginSchema)
-    @blp.response(200, responseSchema(UserSchema))
+    @blp.response(200, responseSchema(UserLoginSchema))
     @blp.alt_response(401, example={"code": 401, "message": INVALID_CREDENTIAL, "status": "Unauthorized"})
     @blp.alt_response(404, example={"code": 404, "message": INVALID_USER, "status": "Not Found"})
     def post(self, login_data):
@@ -281,7 +319,14 @@ class UserLogin(MethodView):
                         message=INVALID_CREDENTIAL,
                     )
                 else:
-                    return Response(data=user)
+                    access_token = create_access_token(identity=user.id, fresh=True)
+                    refresh_token = create_refresh_token(identity=user.id)
+                    res = {
+                        "email": user.email_address,
+                        "access_token": access_token,
+                        "refresh_token": refresh_token
+                    }
+                    return Response(data=res, message="Logged in successful.")
         except SQLAlchemyError as e:
             return Response.server_error(message=str(e))
 
@@ -290,3 +335,11 @@ class UserLogout(MethodView):
     @blp.response(200, responseSchema(UserSchema))
     def post(self):
         return Response.unimplemented()
+
+@blp.route('/refresh')
+class UserRefreshToken(MethodView):
+    @jwt_required(refresh=True)
+    def get(self):
+        user_id = get_jwt_identity()
+        access_token = create_access_token(identity=user_id, fresh=False)
+        return {"access_token": access_token}

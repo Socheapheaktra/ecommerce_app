@@ -14,6 +14,8 @@ class BaseResponseSchema(Schema):
 class UserLoginSchema(Schema):
     email = fields.Email(required=True, allow_none=False)
     password = fields.Str(required=True, allow_none=False, load_only=True)
+    access_token = fields.Str(required=True, allow_none=False, dump_only=True)
+    refresh_token = fields.Str(required=True, allow_none=False, dump_only=True)
 
 class PlainUserSchema(Schema):
     id = fields.Int(required=True, allow_none=False, dump_only=True)
@@ -63,6 +65,7 @@ class CountrySchema(PlainCountrySchema):
     addresses = fields.List(fields.Nested(PlainAddressSchema()), dump_only=True)
 
 class UserSchema(PlainUserSchema):
+    role_id = fields.Int()
     role = fields.Nested(PlainRoleSchema(only=["name"]), dump_only=True)
     addresses = fields.List(fields.Nested(PlainAddressSchema()), dump_only=True)
     payment_methods = fields.List(fields.Nested(PlainUserPaymentMethodSchema()), dump_only=True)

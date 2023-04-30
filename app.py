@@ -47,8 +47,8 @@ def create_app():
     configure_uploads(app, IMAGE_SET)  # Need to put this after the app.config
     
     # Randomly Generated SECRET KEY
-    # app.config['JWT_SECRET_KEY'] = "273400726116270771902746508700512837087"
-    # jwt = JWTManager(app)
+    app.config['JWT_SECRET_KEY'] = "273400726116270771902746508700512837087"
+    jwt = JWTManager(app)
 
     """
     These methods use to modify the Error response about the Authorization
@@ -80,31 +80,37 @@ def create_app():
     #         401
     #     )
 
-    # @jwt.additional_claims_loader
-    # def add_claims_to_jwt(identity):
-    #     # Do sth in database to verify whether the user is admin or not
-    #     if identity == 1:
-    #         return {"is_admin": True}
+    @jwt.additional_claims_loader
+    def add_claims_to_jwt(identity):
+        # Do sth in database to verify whether the user is admin or not
+        user = models.UserModel.find_by_id(id=identity)
+        if user.role.name.lower() == "administrator":
+            return {"is_admin": True}
 
-    #     return {"is_admin": False}
+        return {"is_admin": False}
     
-    # @jwt.expired_token_loader
-    # def expired_token_callback(jwt_header, jwt_payload):
-    #     return (jsonify({"message": "The token has expired.", "erro": "token expired."}), 401)
+    @jwt.expired_token_loader
+    def expired_token_callback(jwt_header, jwt_payload):
+        return (jsonify({"message": "The token has expired.", "erro": "token expired."}), 401)
 
     # @jwt.invalid_token_loader
     # def invalid_token_callback(error):
     #     return (jsonify({"message": "Signature verification failed.", "error": "invalid token."}), 401)
 
-    # @jwt.unauthorized_loader
-    # def missing_token_callback(error):
-    #     return (jsonify({
-    #         "description": "Request does not contain access token.",
-    #         "error": "authorization required."
-    #     }), 401)
+    @jwt.unauthorized_loader
+    def missing_token_callback(error):
+        return (jsonify({
+            "description": "Missing Access Token.",
+            "error": "authorization required."
+        }), 401)
 
-    @app.before_first_request
-    def create_table():
+    #FIXME: @app.before_first_request got deprecated
+    # @app.before_first_request
+    # def create_table():
+    #     db.create_all()
+    
+    #TODO: Use this instead
+    with app.app_context():
         db.create_all()
 
     api.register_blueprint(UserBlueprint, url_prefix=api_prefix) 
