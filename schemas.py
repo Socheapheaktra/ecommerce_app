@@ -1,13 +1,15 @@
 from marshmallow import Schema, fields
 
-def responseSchema(parent_schema: Schema, many: bool = False):
-    class ResponseSchema(Schema):
-        code = fields.Int(required=True, allow_none=False, dump_only=True)
-        status = fields.Str(required=True, allow_none=False, dump_only=True)
-        message = fields.Str(dump_only=True)
+def responseSchema(parent_schema: Schema = None, many: bool = False):
+    class ResponseSchema(BaseResponseSchema):
         data = fields.Nested(parent_schema, many=many, allow_none=True, dump_only=True)
     
     return ResponseSchema
+
+class BaseResponseSchema(Schema):
+    code = fields.Int(required=True, allow_none=False, dump_only=True)
+    status = fields.Str(required=True, allow_none=False, dump_only=True)
+    message = fields.Str(dump_only=True)
 
 class UserLoginSchema(Schema):
     email = fields.Email(required=True, allow_none=False)
@@ -74,7 +76,6 @@ class AddressSchema(PlainAddressSchema):
     users = fields.List(fields.Nested(PlainUserSchema()), dump_only=True)
 
 class UserAndAddressSchema(Schema):
-    message = fields.Str(required=True, dump_only=True)
     user = fields.Nested(PlainUserSchema(), dump_only=True)
     address = fields.Nested(PlainAddressSchema(), dump_only=True)
 

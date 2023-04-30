@@ -4,36 +4,47 @@ from flask_smorest import Api
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
 from flask_cors import CORS
+from flask_uploads import configure_uploads, patch_request_class
 
 from db import db
 
-import models
+import models, config
 
 from resources.user import blp as UserBlueprint
 from resources.role import blp as RoleBlueprint
 from resources.country import blp as CountryBlueprint
 from resources.address import blp as AddressBlueprint
 from resources.payment_type import blp as PaymentTypeBlueprint
+from resources.image import blp as ImageBlueprint
+
+from utils.image_helper import IMAGE_SET
+
+api_prefix = f"{config.API_PREFIX}/{config.API_VERSION}"
 
 def create_app():
     # Initialize Flask Application
     app = Flask(__name__)
     CORS(app)
 
-    app.config['PROPAGATE_EXCEPTIONS'] = True # I have no IDEA WTF this is
-    app.config['API_TITLE'] = "E-Commerce REST API" # Name of your API
-    app.config['API_VERSION'] = 'v1' # Version of your API
-    app.config['OPENAPI_VERSION'] = "3.0.3" # Also Version of your API Documents
-    app.config['OPENAPI_URL_PREFIX'] = '/' # URL Prefix
-    app.config['OPENAPI_SWAGGER_UI_PATH'] = "/swagger-ui" # API Document's Path
-    app.config['OPENAPI_SWAGGER_UI_URL'] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/" # Swagger API cdn
-    app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///data.db" # Connection String to your database
+    app.config['UPLOADED_IMAGES_DEST'] = config.UPLOADED_IMAGES_DEST  # define the path to save the image
+    app.config['PROPAGATE_EXCEPTIONS'] = config.PROPAGATE_EXCEPTIONS # I have no IDEA WTF this is
+    app.config['API_TITLE'] = config.API_TITLE # Name of your API
+    app.config['API_VERSION'] = config.API_VERSION # Version of your API
+    app.config['OPENAPI_VERSION'] = config.OPENAPI_VERSION # Also Version of your API Documents
+    app.config['OPENAPI_URL_PREFIX'] = config.OPENAPI_URL_PREFIX # URL Prefix
+    app.config['OPENAPI_SWAGGER_UI_PATH'] = config.OPENAPI_SWAGGER_UI_PATH # API Document's Path
+    app.config['OPENAPI_SWAGGER_UI_URL'] = config.OPENAPI_SWAGGER_UI_URL # Swagger API cdn
+    app.config['SQLALCHEMY_DATABASE_URI'] = config.SQLALCHEMY_DATABASE_URI # Connection String to your database
     # app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://username:password@localhost/db_name" # Connection String to your database
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False # Also no idea wtf this is
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = config.SQLALCHEMY_TRACK_MODIFICATIONS # Also no idea wtf this is
+
     db.init_app(app) # Initialize Database
     # migrate = Migrate(app, db) # Migrate Database
-
     api = Api(app) # Link API
+
+    # Configure ImageUploads
+    patch_request_class(app, 10 * 1024 * 1024)  # 10MB max size upload
+    configure_uploads(app, IMAGE_SET)  # Need to put this after the app.config
     
     # Randomly Generated SECRET KEY
     # app.config['JWT_SECRET_KEY'] = "273400726116270771902746508700512837087"
@@ -96,11 +107,12 @@ def create_app():
     def create_table():
         db.create_all()
 
-    api.register_blueprint(UserBlueprint) 
-    api.register_blueprint(RoleBlueprint)
-    api.register_blueprint(CountryBlueprint)
-    api.register_blueprint(AddressBlueprint)
-    api.register_blueprint(PaymentTypeBlueprint)
+    api.register_blueprint(UserBlueprint, url_prefix=api_prefix) 
+    api.register_blueprint(RoleBlueprint, url_prefix=api_prefix)
+    api.register_blueprint(CountryBlueprint, url_prefix=api_prefix)
+    api.register_blueprint(AddressBlueprint, url_prefix=api_prefix)
+    api.register_blueprint(PaymentTypeBlueprint, url_prefix=api_prefix)
+    api.register_blueprint(ImageBlueprint, url_prefix=api_prefix)
 
     @app.route('/')
     def home():
@@ -110,4 +122,4 @@ def create_app():
 
 if __name__ == "__main__":
     app = create_app()
-    app.run(debug=True, host='0.0.0.0', port=5010)
+    app.run(debug=config.DEBUG, host=config.HOST, port=config.PORT)

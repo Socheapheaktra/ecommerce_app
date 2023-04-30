@@ -56,7 +56,7 @@ class UserModel(db.Model):
 
     @classmethod
     def find_by_id(cls, id: int) -> "UserModel":
-        return cls.query.get_or_404(id)
+        return cls.query.get(id)
 
     def save_to_db(self) -> None:
         db.session.add(self)
