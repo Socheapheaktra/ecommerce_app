@@ -1,5 +1,7 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
+from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
+
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 from models import RoleModel
@@ -20,24 +22,29 @@ DELETE_SUCCESS = "Role has been deleted successfully."
 
 @blp.route('/role')
 class RoleOperation(MethodView):
+    @jwt_required()
     @blp.response(200, responseSchema(PlainRoleSchema, many=True))
-    @blp.alt_response(500, example={"code": 500, "message": SELECT_ERROR, "status": "Internal Server Error"})
     def get(self):
         """Return List of Roles existed in database"""
         try:
+            cur_user = get_jwt()
+            if not cur_user['is_admin']:
+                return Response.access_denied()
             roles = RoleModel.find_all()
             return Response(data=roles)
-        except SQLAlchemyError as error:
-            return Response.server_error(message=str(error))
+        except SQLAlchemyError:
+            return Response.server_error()
 
+    @jwt_required()
     @blp.arguments(RoleSchema)
     @blp.response(201, responseSchema(PlainRoleSchema))
-    @blp.alt_response(400, example={"code": 400, "message": INTEGRITY_ERROR, "status": "Bad Request"})
-    @blp.alt_response(500, example={"code": 500, "message": INSERT_ERROR, "status": "Internal Server Error"})
     def post(self, role_data):
         """Add new role into database if not exists"""
-        role = RoleModel(**role_data)
         try:
+            cur_user = get_jwt()
+            if not cur_user['is_admin']:
+                return Response.access_denied()
+            role = RoleModel(**role_data)
             role.save_to_db()
             return Response(
                 code=201,
@@ -56,12 +63,16 @@ class RoleOperation(MethodView):
 
 @blp.route("/role/<int:role_id>")
 class RoleUpdate(MethodView):
+    @jwt_required()
     @blp.response(200, responseSchema(RoleSchema))
     @blp.alt_response(404, example={"code": 404, "message": ROLE_NOT_FOUND, "status": "Not Found"})
     @blp.alt_response(500, example={"code": 500, "message": SELECT_ERROR, "status": "Internal Server Error"})
     def get(self, role_id):
         """Return Role Information based on RoleID"""
         try:
+            cur_user = get_jwt()
+            if not cur_user['is_admin']:
+                return Response.access_denied()
             role = RoleModel.find_by_id(id=role_id)
             if not role:
                 return Response.not_found(message=ROLE_NOT_FOUND.format(id=role_id))
@@ -69,12 +80,16 @@ class RoleUpdate(MethodView):
         except SQLAlchemyError as error:
             return Response.server_error(message=str(error))
 
+    @jwt_required()
     @blp.response(200, responseSchema(PlainRoleSchema))
     @blp.alt_response(404, example={"code": 404, "message": ROLE_NOT_FOUND, "status": "Not Found"})
     @blp.alt_response(500, example={"code": 500, "message": DELETE_ERROR, "status": "Internal Server Error"})
     def delete(self, role_id):
         """Delete Role from database based on RoleID if exists"""
         try:
+            cur_user = get_jwt()
+            if not cur_user['is_admin']:
+                return Response.access_denied()
             role = RoleModel.find_by_id(id=role_id)
             if not role:
                 return Response.not_found(message=ROLE_NOT_FOUND.format(id=role_id))
