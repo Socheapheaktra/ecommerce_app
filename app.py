@@ -91,7 +91,10 @@ def create_app():
     
     @jwt.expired_token_loader
     def expired_token_callback(jwt_header, jwt_payload):
-        return (jsonify({"message": "The token has expired.", "erro": "token expired."}), 401)
+        return (jsonify({
+            "message": "The token has expired.", 
+            "error": "token expired."
+        }), 401)
 
     # @jwt.invalid_token_loader
     # def invalid_token_callback(error):
@@ -100,16 +103,10 @@ def create_app():
     @jwt.unauthorized_loader
     def missing_token_callback(error):
         return (jsonify({
-            "description": "Missing Access Token.",
+            "message": "Missing Access Token.",
             "error": "authorization required."
         }), 401)
 
-    #FIXME: @app.before_first_request got deprecated
-    # @app.before_first_request
-    # def create_table():
-    #     db.create_all()
-    
-    #TODO: Use this instead
     with app.app_context():
         db.create_all()
 
