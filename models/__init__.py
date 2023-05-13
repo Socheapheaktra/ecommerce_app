@@ -4,3 +4,11 @@ from models.role import RoleModel
 from models.address import AddressModel
 from models.country import CountryModel
 from models.payment_type import PaymentTypeModel
+from models.product_category import ProductCategory
+from models.product import Product
+from models.product_item import ProductItem
+from models.image import Image
+from models.image_line import ImageLine
+from models.variation import Variation
+from models.variation_line import VariationLine
+from models.shipping_method import ShippingMethod
