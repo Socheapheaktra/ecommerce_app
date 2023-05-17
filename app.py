@@ -26,6 +26,7 @@ def create_app():
     app = Flask(__name__)
     CORS(app)
 
+    app.config['JSON_SORT_KEYS'] = config.JSON_SORT_KEYS # Disable flask from sorting the response
     app.config['UPLOADED_IMAGES_DEST'] = config.UPLOADED_IMAGES_DEST  # define the path to save the image
     app.config['PROPAGATE_EXCEPTIONS'] = config.PROPAGATE_EXCEPTIONS # I have no IDEA WTF this is
     app.config['API_TITLE'] = config.API_TITLE # Name of your API
@@ -35,7 +36,6 @@ def create_app():
     app.config['OPENAPI_SWAGGER_UI_PATH'] = config.OPENAPI_SWAGGER_UI_PATH # API Document's Path
     app.config['OPENAPI_SWAGGER_UI_URL'] = config.OPENAPI_SWAGGER_UI_URL # Swagger API cdn
     app.config['SQLALCHEMY_DATABASE_URI'] = config.SQLALCHEMY_DATABASE_URI # Connection String to your database
-    # app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://username:password@localhost/db_name" # Connection String to your database
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = config.SQLALCHEMY_TRACK_MODIFICATIONS # Also no idea wtf this is
 
     db.init_app(app) # Initialize Database
@@ -91,10 +91,12 @@ def create_app():
     
     @jwt.expired_token_loader
     def expired_token_callback(jwt_header, jwt_payload):
-        return (jsonify({
-            "message": "The token has expired.", 
-            "error": "token expired."
-        }), 401)
+        res = {
+            "code": 401,
+            "status": "Unauthorized",
+            "message": "Token Expired",
+        }
+        return (jsonify(res), 401)
 
     # @jwt.invalid_token_loader
     # def invalid_token_callback(error):
@@ -102,10 +104,12 @@ def create_app():
 
     @jwt.unauthorized_loader
     def missing_token_callback(error):
-        return (jsonify({
-            "message": "Missing Access Token.",
-            "error": "authorization required."
-        }), 401)
+        res = {
+            "code": 401,
+            "message": "Missing Token.",
+            "status": "Unauthorized"
+        }
+        return (jsonify(res), 401)
 
     with app.app_context():
         db.create_all()

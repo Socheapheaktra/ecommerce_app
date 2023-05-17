@@ -65,8 +65,7 @@ class CountrySchema(PlainCountrySchema):
     addresses = fields.List(fields.Nested(PlainAddressSchema()), dump_only=True)
 
 class UserSchema(PlainUserSchema):
-    role_id = fields.Int()
-    role = fields.Nested(PlainRoleSchema(only=["name"]), dump_only=True)
+    role = fields.Nested(PlainRoleSchema(), dump_only=True)
     addresses = fields.List(fields.Nested(PlainAddressSchema()), dump_only=True)
     payment_methods = fields.List(fields.Nested(PlainUserPaymentMethodSchema()), dump_only=True)
 

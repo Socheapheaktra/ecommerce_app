@@ -3,6 +3,7 @@ import os
 UPLOADED_IMAGES_DEST = os.path.join('static', 'images')
 
 PROPAGATE_EXCEPTIONS = True
+JSON_SORT_KEYS = False
 
 API_TITLE = 'E-Commerce REST API'
 API_VERSION = 'v1'
