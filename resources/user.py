@@ -1,3 +1,4 @@
+from flask import jsonify
 from flask.views import MethodView
 from flask_smorest import abort, Blueprint
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -118,6 +119,9 @@ class UserUpdate(MethodView):
     def get(self, user_id):
         """Get User Information based on UserID"""
         try:
+            cur_user = get_jwt()
+            if not cur_user['is_admin']:
+                return Response.access_denied()
             user = UserModel.find_by_id(id=user_id)
             if not user:
                 return Response(code=404, status="Not Found", message=f"Unable to find user with id='{user_id}'")
@@ -206,6 +210,9 @@ class UserPaymentMethod(MethodView):
     def get(self, user_id):
         """Return List of specific user's Payment Method."""
         try:
+            cur_user = get_jwt()
+            if not cur_user['is_admin']:
+                return Response.access_denied()
             payment_methods = UserPaymentMethodModel.find_all(user_id=user_id)
             return Response(data=payment_methods)
         except SQLAlchemyError as error:
@@ -224,6 +231,9 @@ class LinkUserAndAddress(MethodView):
     @blp.response(201, responseSchema(UserAndAddressSchema))
     def post(self, user_id, address_id):
         try:
+            cur_user = get_jwt()
+            if not cur_user['is_admin']:
+                return Response.access_denied()
             """Link User to one or more addresses"""
             # Check if user exists
             user = UserModel.query.filter_by(id=user_id).first()
@@ -268,7 +278,7 @@ class UserResetPassword(MethodView):
     @blp.arguments(UpdatePasswordWithEmailSchema)
     @blp.response(200, UpdatePasswordWithEmailSchema)
     def post(self, user_data):
-        return Response(code=501, status="Not Implemented", message="Sorry, this feature is not yet implemented.")
+        return Response.unimplemented()
         abort(501, message="Reset Password by Email is not yet implemented.")
         """Reset User's Password with email address (Need Email Confirmation)"""
         user = UserModel.query.filter_by(email_address=user_data['email']).first()
@@ -286,7 +296,7 @@ class UserResetPassword(MethodView):
 @blp.route('/login')
 class UserLogin(MethodView):
     @blp.arguments(UserLoginSchema)
-    @blp.response(200, responseSchema(UserLoginSchema))
+    @blp.response(200, responseSchema(AccessTokenSchema))
     def post(self, login_data):
         """Return Login Message whethere successful or not"""
         try:
@@ -309,7 +319,6 @@ class UserLogin(MethodView):
                     access_token = create_access_token(identity=user.id, fresh=True)
                     refresh_token = create_refresh_token(identity=user.id)
                     res = {
-                        "email": user.email_address,
                         "access_token": access_token,
                         "refresh_token": refresh_token
                     }
@@ -326,7 +335,11 @@ class UserLogout(MethodView):
 @blp.route('/refresh')
 class UserRefreshToken(MethodView):
     @jwt_required(refresh=True)
+    @blp.response(200, responseSchema(RefreshTokenSchema))
     def get(self):
         user_id = get_jwt_identity()
         access_token = create_access_token(identity=user_id, fresh=False)
-        return {"access_token": access_token}
+        res = {
+            "access_token": access_token,
+        }
+        return Response(data=res)

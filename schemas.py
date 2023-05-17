@@ -6,6 +6,12 @@ def responseSchema(parent_schema: Schema = None, many: bool = False):
     
     return ResponseSchema
 
+class RefreshTokenSchema(Schema):
+    access_token = fields.Str(required=True, allow_none=False, dump_only=True)
+
+class AccessTokenSchema(RefreshTokenSchema):
+    refresh_token = fields.Str(required=True, allow_none=False, dump_only=True)
+
 class BaseResponseSchema(Schema):
     code = fields.Int(required=True, allow_none=False, dump_only=True)
     status = fields.Str(required=True, allow_none=False, dump_only=True)
@@ -14,8 +20,6 @@ class BaseResponseSchema(Schema):
 class UserLoginSchema(Schema):
     email = fields.Email(required=True, allow_none=False)
     password = fields.Str(required=True, allow_none=False, load_only=True)
-    access_token = fields.Str(required=True, allow_none=False, dump_only=True)
-    refresh_token = fields.Str(required=True, allow_none=False, dump_only=True)
 
 class PlainUserSchema(Schema):
     id = fields.Int(required=True, allow_none=False, dump_only=True)
