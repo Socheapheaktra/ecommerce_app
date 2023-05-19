@@ -5,12 +5,11 @@ class AddressModel(db.Model):
     __tablename__ = "address"
 
     id = db.Column(db.Integer, primary_key=True)
-    street_number = db.Column(db.String(80), nullable=False)
+    street_number = db.Column(db.String(80))
     address_line1 = db.Column(db.String(80), nullable=False)
-    address_line2 = db.Column(db.String(80), nullable=True)
-    city = db.Column(db.String(80), nullable=False)
-    region = db.Column(db.String(80), nullable=False)
-    postal_code = db.Column(db.String(80), nullable=False)
+    address_line2 = db.Column(db.String(80))
+    city = db.Column(db.String(80))
+    postal_code = db.Column(db.String(80))
     country_id = db.Column(db.Integer, db.ForeignKey("country.id"), nullable=False)
 
     country = db.relationship("CountryModel", back_populates="addresses")

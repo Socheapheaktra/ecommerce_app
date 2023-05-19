@@ -8,7 +8,18 @@ from flask_jwt_extended import (create_refresh_token,
                                 get_jwt,
                                 jwt_required)
 
-from schemas import *
+from schemas.response_schema import responseSchema, BaseResponseSchema
+from schemas.token_schema import AccessTokenSchema, RefreshTokenSchema
+from schemas.user_schema import (
+    UserLoginSchema,
+    PlainUserSchema,
+    UserSchema,
+    UpdatePasswordSchema,
+    UserPaymentMethodSchema,
+    UserAndAddressSchema,
+    UpdatePasswordWithEmailSchema,
+)
+
 from models import UserModel, AddressModel, UserPaymentMethodModel, RoleModel
 from utils.helper import Response
 
