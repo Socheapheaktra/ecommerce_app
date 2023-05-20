@@ -21,8 +21,6 @@ blp = Blueprint("Image", __name__, description="Image Uploads")
 @blp.route('/upload-image')
 class ImageUpload(MethodView):
     @blp.response(200, BaseResponseSchema)
-    @blp.alt_response(400, example=Response.bad_request(message="Image extension not allowed."))
-    @blp.alt_response(500, example=Response.server_error(message="Failed to upload image."))
     def post(self):
         """
         Used to upload an image file.
@@ -35,23 +33,20 @@ class ImageUpload(MethodView):
             basename = image_helper.get_basename(image_path)
             return Response(
                 message=f"Image '{basename}' has been uploaded successfully."
-            ).without_data()
+            )
         except UploadNotAllowed:
             extension = image_helper.get_extension(data["image"])
             return Response.bad_request(
                 message=f"Image extension '{extension}' is not allowed."
-            ).without_data()
+            )
         except Exception:
             return Response.server_error(
                 message="Fail to upload image."
-            ).without_data()
+            )
         
 @blp.route('/image/url/<string:filename>')
 class NetworkImage(MethodView):
     @blp.response(200, responseSchema(ImageUploadSchema))
-    @blp.alt_response(400, example=Response.bad_request(message="Illegal filename detected."))
-    @blp.alt_response(404, example=Response.not_found(message="Image Not Found"))
-    @blp.alt_response(500, example=Response.server_error(message="Unable to get image."))
     def get(self, filename: str):
         if not image_helper.is_filename_safe(file=filename):
             return Response.bad_request(message="Illegal filename detected.")

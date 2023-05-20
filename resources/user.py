@@ -1,11 +1,13 @@
 from flask.views import MethodView
 from flask_smorest import abort, Blueprint
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from flask_jwt_extended import (create_refresh_token,
-                                create_access_token,
-                                get_jwt_identity,
-                                get_jwt,
-                                jwt_required)
+from flask_jwt_extended import (
+    create_refresh_token,
+    create_access_token,
+    get_jwt_identity,
+    get_jwt,
+    jwt_required
+)
 
 from schemas.response_schema import responseSchema, BaseResponseSchema
 from schemas.token_schema import AccessTokenSchema, RefreshTokenSchema

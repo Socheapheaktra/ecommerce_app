@@ -16,6 +16,7 @@ class VariationLine(db.Model):
 
     variation = db.relationship(
         "Variation",
+        cascade="all,delete",
         back_populates="variation_lines",
     )
 
