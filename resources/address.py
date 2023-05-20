@@ -3,7 +3,8 @@ from flask_smorest import abort, Blueprint
 from sqlalchemy.exc import SQLAlchemyError
 
 from models import AddressModel, CountryModel
-from schemas import *
+from schemas.response_schema import responseSchema, BaseResponseSchema
+from schemas.address_schema import PlainAddressSchema, AddressSchema
 
 blp = Blueprint("Addresses", __name__, description="Operations on Addresses.")
 

@@ -3,7 +3,8 @@ from flask_smorest import Blueprint, abort
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 from models import PaymentTypeModel
-from schemas import *
+from schemas.response_schema import responseSchema, BaseResponseSchema
+from schemas.payment_type_schema import PaymentTypeSchema
 
 blp = Blueprint(
     "Payment Types",
@@ -20,7 +21,7 @@ INVALID_PAYMENT_TYPE = "Invalid PaymentType ID"
 
 @blp.route('/payment-type')
 class PaymentType(MethodView):
-    @blp.response(200, responseSchema(PlainPaymentTypeSchema, many=True))
+    @blp.response(200, responseSchema(PaymentTypeSchema, many=True))
     @blp.alt_response(500, example={"code": 500, "message": SELECT_ERROR, "status": "Internal Server Error"})
     def get(sefl):
         """Get List of Payment Types"""
@@ -37,8 +38,8 @@ class PaymentType(MethodView):
             }
             return res
 
-    @blp.arguments(PlainPaymentTypeSchema)
-    @blp.response(200, responseSchema(PlainPaymentTypeSchema))
+    @blp.arguments(PaymentTypeSchema)
+    @blp.response(200, responseSchema(PaymentTypeSchema))
     @blp.alt_response(400, example={"code": 400, "message": INTEGRITY_ERROR, "status": "Bad Request"})
     @blp.alt_response(500, example={"code": 500, "message": INSERT_ERROR, "status": "Internal Server Error"})
     def post(self, data):
@@ -77,7 +78,7 @@ class PaymentTypeDetail(MethodView):
             }
             return res
 
-    @blp.response(200, responseSchema(PlainPaymentTypeSchema))
+    @blp.response(200, responseSchema(PaymentTypeSchema))
     @blp.alt_response(404, example={"code": 404, "message": INVALID_PAYMENT_TYPE, "status": "Not Found"})
     @blp.alt_response(500, example={"code": 500, "message": DELETE_ERROR})
     def delete(self, payment_type_id):

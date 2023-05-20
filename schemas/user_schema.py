@@ -1,7 +1,7 @@
 from marshmallow import Schema, fields
-from role_schema import RoleSchema
-from address_schema import AddressSchema
-from payment_type_schema import PaymentTypeSchema
+from .role_schema import RoleSchema
+from .address_schema import AddressSchema
+from .payment_type_schema import PaymentTypeSchema
 
 class UserLoginSchema(Schema):
     email = fields.Email(required=True, allow_none=False)

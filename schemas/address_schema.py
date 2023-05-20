@@ -1,5 +1,5 @@
 from marshmallow import Schema, fields
-from country_schema import CountrySchema
+from .country_schema import CountrySchema
 
 class PlainAddressSchema(Schema):
     id = fields.Int(required=True, allow_none=False, dump_only=True)

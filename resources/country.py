@@ -3,7 +3,8 @@ from flask_smorest import abort, Blueprint
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 from models import CountryModel
-from schemas import *
+from schemas.response_schema import responseSchema, BaseResponseSchema
+from schemas.country_schema import CountrySchema
 from utils.helper import Response
 
 blp = Blueprint("Country", __name__, description="Operations on Countries.")
@@ -20,7 +21,7 @@ DELETE_SUCCESS = "Country deleted successfully."
 
 @blp.route('/country')
 class CountryOperation(MethodView):
-    @blp.response(200, responseSchema(PlainCountrySchema, many=True))
+    @blp.response(200, responseSchema(CountrySchema, many=True))
     @blp.alt_response(500, example={"code": 500, "message": SELECT_ERROR, "status": "Internal Server Error"})
     def get(self):
         """Return List of Countries from database"""
@@ -31,7 +32,7 @@ class CountryOperation(MethodView):
             return Response.server_error(message=str(error))
 
     @blp.arguments(CountrySchema)
-    @blp.response(201, responseSchema(PlainCountrySchema))
+    @blp.response(201, responseSchema(CountrySchema))
     @blp.alt_response(400, example={"code": 400, "message": INTEGRITY_ERROR, "status": "Bad Request"})
     @blp.alt_response(500, example={"code": 500, "message": INSERT_ERROR, "status": "Internal Server Error"})
     def post(self, country_data):
@@ -65,7 +66,7 @@ class CountryUpdate(MethodView):
         except SQLAlchemyError as error:
             return Response.server_error(message=str(error))
 
-    @blp.response(200, responseSchema(PlainCountrySchema))
+    @blp.response(200, responseSchema(CountrySchema))
     @blp.alt_response(404, example={"code": 404, "message": COUNTRY_NOT_FOUND, "status": "Not Found"})
     @blp.alt_response(500, example={"code": 500, "message": DELETE_ERROR, "status": "Internal Server Error  "})
     def delete(self, country_id):

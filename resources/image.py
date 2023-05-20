@@ -4,7 +4,7 @@ from flask_uploads import UploadNotAllowed
 from flask import request, send_file
 
 from image_schema import ImageSchema
-from schemas import *
+from schemas.response_schema import responseSchema, BaseResponseSchema
 from config import *
 
 from utils import image_helper

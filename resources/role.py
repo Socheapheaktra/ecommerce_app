@@ -5,7 +5,8 @@ from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 from models import RoleModel
-from schemas import *
+from schemas.response_schema import responseSchema, BaseResponseSchema
+from schemas.role_schema import RoleSchema
 from utils.helper import Response
 
 blp = Blueprint("Roles", __name__, description="Operations on Role.")
@@ -23,7 +24,7 @@ DELETE_SUCCESS = "Role has been deleted successfully."
 @blp.route('/role')
 class RoleOperation(MethodView):
     @jwt_required()
-    @blp.response(200, responseSchema(PlainRoleSchema, many=True))
+    @blp.response(200, responseSchema(RoleSchema, many=True))
     def get(self):
         """Return List of Roles existed in database"""
         try:
@@ -37,7 +38,7 @@ class RoleOperation(MethodView):
 
     @jwt_required()
     @blp.arguments(RoleSchema)
-    @blp.response(201, responseSchema(PlainRoleSchema))
+    @blp.response(201, responseSchema(RoleSchema))
     def post(self, role_data):
         """Add new role into database if not exists"""
         try:
@@ -81,7 +82,7 @@ class RoleUpdate(MethodView):
             return Response.server_error(message=str(error))
 
     @jwt_required()
-    @blp.response(200, responseSchema(PlainRoleSchema))
+    @blp.response(200, responseSchema(RoleSchema))
     @blp.alt_response(404, example={"code": 404, "message": ROLE_NOT_FOUND, "status": "Not Found"})
     @blp.alt_response(500, example={"code": 500, "message": DELETE_ERROR, "status": "Internal Server Error"})
     def delete(self, role_id):
