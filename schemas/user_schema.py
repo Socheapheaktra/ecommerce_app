@@ -24,6 +24,7 @@ class PlainUserPaymentMethodSchema(Schema):
     is_default = fields.Boolean(required=True, dump_only=True)
 
 class UserSchema(PlainUserSchema):
+    role_id = fields.Int(load_only=True)
     role = fields.Nested(RoleSchema(), dump_only=True)
     addresses = fields.List(fields.Nested(AddressSchema()), dump_only=True)
     payment_methods = fields.List(fields.Nested(PlainUserPaymentMethodSchema()), dump_only=True)

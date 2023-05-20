@@ -1,6 +1,5 @@
 from marshmallow import Schema, fields
 from werkzeug.datastructures import FileStorage
-from typing import Mapping
 
 class FileStorageField(fields.Field):
     default_error_messages = {
@@ -16,6 +15,6 @@ class FileStorageField(fields.Field):
         
         return value
 
-class ImageSchema(Schema):
+class ImageUploadSchema(Schema):
     image = FileStorageField(required=True, load_only=True)
     image_url = fields.Str(dump_only=True)

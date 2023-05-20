@@ -1,4 +1,3 @@
-from flask import jsonify
 from flask.views import MethodView
 from flask_smorest import abort, Blueprint
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -68,7 +67,7 @@ class UserOperation(MethodView):
             cur_user = get_jwt()
             if not cur_user['is_admin']:
                 return Response.access_denied()
-            role_id = user_data['role_id'] if user_data['role_id'] else 1  # default role="Customer"
+            role_id = user_data['role_id'] if 'role_id' in user_data else 1  # default role="Customer"
             user = UserModel(**user_data, role_id=role_id)
             user.save_to_db()
             return Response(

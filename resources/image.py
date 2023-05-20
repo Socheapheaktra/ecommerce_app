@@ -3,7 +3,7 @@ from flask_smorest import abort, Blueprint
 from flask_uploads import UploadNotAllowed
 from flask import request, send_file
 
-from image_schema import ImageSchema
+from schemas.image_schema import ImageUploadSchema
 from schemas.response_schema import responseSchema, BaseResponseSchema
 from config import *
 
@@ -13,7 +13,7 @@ from utils.helper import Response
 import traceback
 import os
 
-image_schema = ImageSchema()
+image_schema = ImageUploadSchema()
 image_folder = "product_images"  # static/images/product_images
 
 blp = Blueprint("Image", __name__, description="Image Uploads")
@@ -21,8 +21,8 @@ blp = Blueprint("Image", __name__, description="Image Uploads")
 @blp.route('/upload-image')
 class ImageUpload(MethodView):
     @blp.response(200, BaseResponseSchema)
-    @blp.alt_response(400, example=Response.bad_request(message="Image extension not allowed.").json)
-    @blp.alt_response(500, example=Response.server_error(message="Failed to upload image.").json)
+    @blp.alt_response(400, example=Response.bad_request(message="Image extension not allowed."))
+    @blp.alt_response(500, example=Response.server_error(message="Failed to upload image."))
     def post(self):
         """
         Used to upload an image file.
@@ -48,10 +48,10 @@ class ImageUpload(MethodView):
         
 @blp.route('/image/url/<string:filename>')
 class NetworkImage(MethodView):
-    @blp.response(200, responseSchema(ImageSchema))
-    @blp.alt_response(400, example=Response.bad_request(message="Illegal filename detected.").json)
-    @blp.alt_response(404, example=Response.not_found(message="Image Not Found").json)
-    @blp.alt_response(500, example=Response.server_error(message="Unable to get image.").json)
+    @blp.response(200, responseSchema(ImageUploadSchema))
+    @blp.alt_response(400, example=Response.bad_request(message="Illegal filename detected."))
+    @blp.alt_response(404, example=Response.not_found(message="Image Not Found"))
+    @blp.alt_response(500, example=Response.server_error(message="Unable to get image."))
     def get(self, filename: str):
         if not image_helper.is_filename_safe(file=filename):
             return Response.bad_request(message="Illegal filename detected.")

@@ -15,6 +15,7 @@ from resources.role import blp as RoleBlueprint
 from resources.country import blp as CountryBlueprint
 from resources.address import blp as AddressBlueprint
 from resources.payment_type import blp as PaymentTypeBlueprint
+from resources.product_category import blp as ProductCategoryBlueprint
 from resources.image import blp as ImageBlueprint
 
 from utils.image_helper import IMAGE_SET
@@ -118,6 +119,7 @@ def create_app():
     api.register_blueprint(RoleBlueprint, url_prefix=api_prefix)
     api.register_blueprint(CountryBlueprint, url_prefix=api_prefix)
     api.register_blueprint(AddressBlueprint, url_prefix=api_prefix)
+    api.register_blueprint(ProductCategoryBlueprint, url_prefix=api_prefix)
     api.register_blueprint(PaymentTypeBlueprint, url_prefix=api_prefix)
     api.register_blueprint(ImageBlueprint, url_prefix=api_prefix)
 
