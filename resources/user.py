@@ -11,15 +11,7 @@ from flask_jwt_extended import (
 
 from schemas.response_schema import responseSchema, BaseResponseSchema
 from schemas.token_schema import AccessTokenSchema, RefreshTokenSchema
-from schemas.user_schema import (
-    UserLoginSchema,
-    PlainUserSchema,
-    UserSchema,
-    UpdatePasswordSchema,
-    UserPaymentMethodSchema,
-    UserAndAddressSchema,
-    UpdatePasswordWithEmailSchema,
-)
+from schemas.user_schema import *
 
 from models import UserModel, AddressModel, UserPaymentMethodModel, RoleModel
 from utils.helper import Response
@@ -59,6 +51,27 @@ class UserOperation(MethodView):
             return Response(data=users)
         except SQLAlchemyError as error:
             return Response.server_error(message=str(error))
+
+    @jwt_required()
+    @blp.arguments(UpdateUserInfoSchema)
+    @blp.response(200, responseSchema(PlainUserSchema))
+    def put(self, user_data):
+        """Update UserInformation of logged in User"""
+        try:
+            user_id = get_jwt_identity()
+            user = UserModel.find_by_id(id=user_id)
+            if not user:
+                return Response.not_found(message="Invalid UserID")
+            user.first_name = user_data['first_name']
+            user.last_name = user_data['last_name']
+            user.phone_number = user_data['phone_number']
+            user.save_to_db()
+            return Response(
+                data=user,
+                message="Your information has been updated successfully."
+            )
+        except SQLAlchemyError as error:
+            return Response.server_error(message=error)
 
     @jwt_required()
     @blp.arguments(UserSchema)
@@ -136,9 +149,35 @@ class UserUpdate(MethodView):
                 return Response.access_denied()
             user = UserModel.find_by_id(id=user_id)
             if not user:
-                return Response(code=404, status="Not Found", message=f"Unable to find user with id='{user_id}'")
+                return Response.not_found(message="Invalid User ID")
             else:
                 return Response(data=user)
+        except SQLAlchemyError as error:
+            return Response.server_error(message=error)
+
+    @jwt_required()
+    @blp.arguments(UpdateUserSchema)
+    @blp.response(200, responseSchema(PlainUserSchema))
+    def put(self, user_id, user_data):
+        """Update User Information Based on UserID"""
+        try:
+            cur_user = get_jwt()
+            if not cur_user['is_admin']:
+                return Response.access_denied()
+            user = UserModel.find_by_id(id=user_id)
+            if not user:
+                return Response.not_found(message="Invalid User ID")
+            user.first_name = user_data['first_name']
+            user.last_name = user_data['last_name']
+            user.phone_number = user_data['phone_number']
+            user.password = user_data['password']
+            user.role_id = user_data['role_id']
+            user.status = user_data['status']
+            user.save_to_db()
+            return Response(
+                data=user,
+                message="Successfully Updated User Information."
+            )
         except SQLAlchemyError as error:
             return Response.server_error(message=error)
 

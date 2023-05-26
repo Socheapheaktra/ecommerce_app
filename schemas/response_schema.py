@@ -1,4 +1,5 @@
-from marshmallow import Schema, fields
+from marshmallow import fields, Schema
+from .base_schema import BaseSchema
 
 def responseSchema(parent_schema: Schema = None, many: bool = False):
     class ResponseSchema(BaseResponseSchema):
@@ -6,7 +7,7 @@ def responseSchema(parent_schema: Schema = None, many: bool = False):
     
     return ResponseSchema
 
-class BaseResponseSchema(Schema):
+class BaseResponseSchema(BaseSchema):
     code = fields.Int(required=True, allow_none=False, dump_only=True)
     status = fields.Str(required=True, allow_none=False, dump_only=True)
     message = fields.Str(dump_only=True)
