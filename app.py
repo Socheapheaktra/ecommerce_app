@@ -41,9 +41,18 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = config.SQLALCHEMY_TRACK_MODIFICATIONS # Also no idea wtf this is
 
     db.init_app(app) # Initialize Database
-    # migrate = Migrate(app, db) # Migrate Database
     api = Api(app) # Link API
 
+    migrate = Migrate(app, db) # Migrate Database
+    """
+    NOTE: Flask Migrate CLI:
+        - "flask db init" -> initialize the current database with the initial models
+        - "flask db migrate" -> takes the current database and compare it to the new models that we define or change
+            - Use this CLI every time we change the database structure or schema
+        - "flask db upgrade" -> takes the current version of the database and apply the changes that we migrated using the above CLI
+        - "flask db downgrade" -> takes the current model and revert back to the previous migration
+    """
+    
     # Configure ImageUploads
     patch_request_class(app, 10 * 1024 * 1024)  # 10MB max size upload
     configure_uploads(app, IMAGE_SET)  # Need to put this after the app.config

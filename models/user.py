@@ -12,6 +12,8 @@ class UserModel(db.Model):
     __tablename__ = "site_user"
 
     id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(80))
+    last_name = db.Column(db.String(80))
     email_address = db.Column(db.String(80), unique=True, nullable=False)
     phone_number = db.Column(db.String(80), nullable=False)
     password = db.Column(db.String(255), nullable=False)
@@ -38,12 +40,16 @@ class UserModel(db.Model):
 
     def __init__(
         self,
+        first_name: str,
+        last_name: str,
         email_address: str,
         phone_number: str,
         password: str,
         role_id: int = 1,
         status: bool = 1,
     ) -> None:
+        self.first_name = first_name
+        self.last_name = last_name
         self.email_address = email_address
         self.phone_number = phone_number
         self.password = password
