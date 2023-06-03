@@ -45,6 +45,8 @@ class RoleOperation(MethodView):
             cur_user = get_jwt()
             if not cur_user['is_admin']:
                 return Response.access_denied()
+            if role_data['name'] == "":
+                return Response.bad_request(message="Role name cannot be empty!")
             role = RoleModel(**role_data)
             role.save_to_db()
             return Response(
@@ -94,8 +96,12 @@ class RoleUpdate(MethodView):
             role = RoleModel.find_by_id(id=role_id)
             if not role:
                 return Response.not_found(message=ROLE_NOT_FOUND.format(id=role_id))
-
-            role.delete_from_db()
+            if role.users:
+                return Response.bad_request(
+                    message="Unable to delete role with existing users."
+                )
+            else:
+                role.delete_from_db()
             return Response(data=role, message=DELETE_SUCCESS)
         except SQLAlchemyError as error:
             return Response.server_error(message=str(error))

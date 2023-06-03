@@ -7,7 +7,6 @@ class AddressModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     street_number = db.Column(db.String(80))
     address_line1 = db.Column(db.String(80), nullable=False)
-    address_line2 = db.Column(db.String(80))
     city = db.Column(db.String(80))
     postal_code = db.Column(db.String(80))
     country_id = db.Column(db.Integer, db.ForeignKey("country.id"), nullable=False)
@@ -25,7 +24,6 @@ class AddressModel(db.Model):
         self,
         street_number: str,
         address_line1: str,
-        address_line2: Union[str, None],
         city: str,
         region: str,
         postal_code: str,
@@ -33,7 +31,6 @@ class AddressModel(db.Model):
     ) -> None:
         self.street_number = street_number
         self.address_line1 = address_line1
-        self.address_line2 = address_line2
         self.city = city
         self.region = region
         self.postal_code = postal_code
@@ -54,7 +51,3 @@ class AddressModel(db.Model):
     def delete_from_db(self) -> None:
         db.session.delete(self)
         db.session.commit()
-        
-    """
-    
-    """

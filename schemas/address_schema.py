@@ -5,7 +5,6 @@ class PlainAddressSchema(Schema):
     id = fields.Int(required=True, allow_none=False, dump_only=True)
     street_number = fields.Str(required=True, allow_none=True)
     address_line1 = fields.Str(required=True, allow_none=False)
-    address_line2 = fields.Str(required=True, allow_none=True)
     city = fields.Str(required=True, allow_none=True)
     postal_code = fields.Str(required=True, allow_none=True)
 

@@ -14,7 +14,7 @@ class CountryModel(db.Model):
 
     @classmethod
     def find_all(cls) -> List["CountryModel"]:
-        return cls.query.all()
+        return cls.query.order_by(CountryModel.country_name).all()
 
     @classmethod
     def find_by_id(cls, id: int) -> "CountryModel":

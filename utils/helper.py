@@ -8,7 +8,7 @@ class Response:
         self, 
         data: any = {}, 
         code: int = 200, 
-        status: str = "OK",
+        status: str = "Success",
         message: str = DEFAULT_SUCCESS_MESSAGE,
     ) -> None:
         self.code = code
@@ -36,7 +36,6 @@ class Response:
     def created(cls, data: any = {}, message: str = DEFAULT_SUCCESS_MESSAGE) -> "Response":
         res = cls(
             code=201,
-            status="Created",
             message=message,
             data=data,
         )
